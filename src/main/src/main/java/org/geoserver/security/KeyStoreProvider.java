@@ -97,17 +97,19 @@ public interface KeyStoreProvider {
      * <p>The new password is assumed to be already validated by the {@link PasswordValidator} named
      * {@link PasswordValidator#MASTERPASSWORD_NAME}
      *
-     * <p>A new key store named {@link KeyStoreProviderImpl#PREPARED_FILE_NAME} is created. All keys a re-encrypted with
-     * the new password and stored in the new key store.
+     * <p>A new key store named {@link AbstractKeyStoreProvider#PREPARED_FILE_NAME} is created. All keys a re-encrypted
+     * with the new password and stored in the new key store.
      */
     void prepareForMasterPasswordChange(char[] oldPassword, char[] newPassword) throws IOException;
 
-    /** Aborts the master password change by removing the file named {@link KeyStoreProviderImpl#PREPARED_FILE_NAME} */
+    /**
+     * Aborts the master password change by removing the file named {@link AbstractKeyStoreProvider#PREPARED_FILE_NAME}
+     */
     void abortMasterPasswordChange();
 
     /**
-     * if {@link KeyStoreProviderImpl#DEFAULT_FILE_NAME} and {@link KeyStoreProviderImpl#PREPARED_FILE_NAME} exist, this
-     * method checks if {@link KeyStoreProviderImpl#PREPARED_FILE_NAME} can be used with new
+     * if {@link AbstractKeyStoreProvider#DEFAULT_FILE_NAME} and {@link AbstractKeyStoreProvider#PREPARED_FILE_NAME}
+     * exist, this method checks if {@link AbstractKeyStoreProvider#PREPARED_FILE_NAME} can be used with new
      * {@link MasterPasswordProvider#getMasterPassword()} method.
      *
      * <p>YES: replace the old keystore with the new one

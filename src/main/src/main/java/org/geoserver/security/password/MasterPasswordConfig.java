@@ -9,6 +9,7 @@ import java.io.Serial;
 import org.apache.commons.lang3.SerializationUtils;
 import org.geoserver.platform.GeoServerEnvironment;
 import org.geoserver.platform.GeoServerExtensions;
+import org.geoserver.security.KeyStoreProviderJCEKS;
 import org.geoserver.security.config.SecurityConfig;
 
 /**
@@ -24,10 +25,13 @@ public class MasterPasswordConfig implements SecurityConfig {
 
     String providerName;
 
+    String keystoreType;
+
     public MasterPasswordConfig() {}
 
     public MasterPasswordConfig(MasterPasswordConfig other) {
         this.providerName = other.getProviderName();
+        this.keystoreType = other.getKeystoreType();
     }
 
     /** The name of the master password provider. */
@@ -40,6 +44,16 @@ public class MasterPasswordConfig implements SecurityConfig {
         this.providerName = providerName;
     }
 
+    /** The keystoreType to use for storing master password */
+    public String getKeystoreType() {
+        return keystoreType == null ? KeyStoreProviderJCEKS.KEYSTORE_TYPE : keystoreType;
+    }
+
+    /** Sets the keystoreType */
+    public void setKeystoreType(String keystoreType) {
+        this.keystoreType = keystoreType;
+    }
+
     @Override
     public SecurityConfig clone(boolean allowEnvParametrization) {
 
@@ -50,6 +64,7 @@ public class MasterPasswordConfig implements SecurityConfig {
         if (target != null) {
             if (allowEnvParametrization && gsEnvironment != null && GeoServerEnvironment.allowEnvParametrization()) {
                 target.setProviderName((String) gsEnvironment.resolveValue(providerName));
+                target.setKeystoreType((String) gsEnvironment.resolveValue(keystoreType));
             }
         }
 

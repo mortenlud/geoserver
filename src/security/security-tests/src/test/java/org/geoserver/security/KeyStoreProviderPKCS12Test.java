@@ -1,5 +1,4 @@
-/* (c) 2014 Open Source Geospatial Foundation - all rights reserved
- * (c) 2001 - 2013 OpenPlans
+/* (c) 2026 Open Source Geospatial Foundation - all rights reserved
  * This code is licensed under the GPL 2.0 license, available at the root
  * application directory.
  */
@@ -12,18 +11,23 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.geoserver.security.password.MasterPasswordConfig;
 import org.geoserver.security.password.RandomPasswordProvider;
 import org.geoserver.test.GeoServerSystemTestSupport;
 import org.junit.Test;
 
-public class KeyStoreProviderTest extends GeoServerSystemTestSupport {
+public class KeyStoreProviderPKCS12Test extends GeoServerSystemTestSupport {
 
     @Test
-    public void testKeyStoreProvider() throws Exception {
+    public void testPKCS12KeyStoreProvider() throws Exception {
 
-        // System.setProperty(MasterPasswordProvider.DEFAULT_PROPERTY_NAME, "mymasterpw");
-        KeyStoreProvider ksp = getSecurityManager().getKeyStoreProvider();
-        ksp.removeKey(KeyStoreProviderImpl.CONFIGPASSWORDKEY);
+        MasterPasswordConfig masterPasswordConfig = getSecurityManager().getMasterPasswordConfig();
+        masterPasswordConfig.setKeystoreType(KeyStoreProviderPKCS12.KEYSTORE_TYPE);
+        getSecurityManager().init(masterPasswordConfig);
+
+        KeyStoreProvider ksp = getSecurityManager().lookupKeyStoreProvider();
+
+        ksp.removeKey(AbstractKeyStoreProvider.CONFIGPASSWORDKEY);
         ksp.removeKey(ksp.aliasForGroupService("default"));
         ksp.storeKeyStore();
         ksp.reloadKeyStore();
@@ -31,7 +35,7 @@ public class KeyStoreProviderTest extends GeoServerSystemTestSupport {
         assertFalse(ksp.hasConfigPasswordKey());
         assertFalse(ksp.hasUserGroupKey("default"));
 
-        ksp.setSecretKey(KeyStoreProviderImpl.CONFIGPASSWORDKEY, "configKey".toCharArray());
+        ksp.setSecretKey(AbstractKeyStoreProvider.CONFIGPASSWORDKEY, "configKey".toCharArray());
         ksp.storeKeyStore();
 
         assertTrue(ksp.hasConfigPasswordKey());
@@ -48,7 +52,7 @@ public class KeyStoreProviderTest extends GeoServerSystemTestSupport {
         assertThat(urlKey, not(equalTo(urlKey2)));
 
         ksp.setSecretKey(
-                KeyStoreProviderImpl.USERGROUP_PREFIX + "default" + KeyStoreProviderImpl.USERGROUP_POSTFIX,
+                AbstractKeyStoreProvider.USERGROUP_PREFIX + "default" + AbstractKeyStoreProvider.USERGROUP_POSTFIX,
                 "defaultKey".toCharArray());
 
         ksp.storeKeyStore();

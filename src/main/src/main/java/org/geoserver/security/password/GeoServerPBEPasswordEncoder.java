@@ -12,10 +12,10 @@ import static org.geoserver.security.SecurityUtils.toChars;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
+import org.geoserver.security.AbstractKeyStoreProvider;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.KeyStoreProvider;
-import org.geoserver.security.KeyStoreProviderImpl;
 import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,7 +35,7 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
     StandardPBEByteEncryptor byteEncrypter;
 
     private String providerName, algorithm;
-    private String keyAliasInKeyStore = KeyStoreProviderImpl.CONFIGPASSWORDKEY;
+    private String keyAliasInKeyStore = AbstractKeyStoreProvider.CONFIGPASSWORDKEY;
 
     private KeyStoreProvider keystoreProvider;
 

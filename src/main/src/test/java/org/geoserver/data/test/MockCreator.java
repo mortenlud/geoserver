@@ -53,13 +53,13 @@ import org.geoserver.data.test.MockCatalogBuilder.Callback;
 import org.geoserver.platform.GeoServerExtensionsHelper;
 import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.platform.resource.Files;
+import org.geoserver.security.AbstractKeyStoreProvider;
 import org.geoserver.security.GeoServerAuthenticationProvider;
 import org.geoserver.security.GeoServerRoleStore;
 import org.geoserver.security.GeoServerSecurityFilterChain;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupStore;
 import org.geoserver.security.KeyStoreProvider;
-import org.geoserver.security.KeyStoreProviderImpl;
 import org.geoserver.security.MasterPasswordProvider;
 import org.geoserver.security.config.PasswordPolicyConfig;
 import org.geoserver.security.config.SecurityAuthProviderConfig;
@@ -366,10 +366,10 @@ public class MockCreator implements Callback {
         expect(keyStoreProvider.isKeyStorePassword(aryEq("geoserver".toCharArray())))
                 .andReturn(true)
                 .anyTimes();
-        expect(keyStoreProvider.containsAlias(KeyStoreProviderImpl.CONFIGPASSWORDKEY))
+        expect(keyStoreProvider.containsAlias(AbstractKeyStoreProvider.CONFIGPASSWORDKEY))
                 .andReturn(true)
                 .anyTimes();
-        expect(keyStoreProvider.getSecretKey(KeyStoreProviderImpl.CONFIGPASSWORDKEY))
+        expect(keyStoreProvider.getSecretKey(AbstractKeyStoreProvider.CONFIGPASSWORDKEY))
                 .andReturn(new SecretKeySpec(toBytes("geoserver".toCharArray()), "PBE"))
                 .anyTimes();
         expect(keyStoreProvider.hasUserGroupKey(XMLUserGroupService.DEFAULT_NAME))

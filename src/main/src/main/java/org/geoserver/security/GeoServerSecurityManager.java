@@ -1048,11 +1048,26 @@ public class GeoServerSecurityManager implements ApplicationContextAware, Applic
         return keyStoreProvider;
     }
 
+    public void reloadKeyStoreFromConfig() {
+        try {
+            keyStoreProvider = lookupKeyStoreProvider();
+            keyStoreProvider.reloadKeyStore();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     KeyStoreProvider lookupKeyStoreProvider() {
         KeyStoreProvider ksp = GeoServerExtensions.bean(KeyStoreProvider.class);
         if (ksp == null) {
-            // use default key store provider
-            ksp = new KeyStoreProviderImpl();
+
+            if (KeyStoreProviderPKCS12.KEYSTORE_TYPE.equals(masterPasswordConfig.getKeystoreType())) {
+                ksp = new KeyStoreProviderPKCS12();
+            } else {
+
+                // use default key store provider
+                ksp = new KeyStoreProviderJCEKS();
+            }
         }
 
         ksp.setSecurityManager(this);

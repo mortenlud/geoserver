@@ -31,18 +31,15 @@ import org.springframework.beans.factory.BeanNameAware;
  *
  * <p><strong>requires a master password</strong> form {@link MasterPasswordProvider}
  *
- * <p>The type of the keystore is JCEKS and can be used/modified with java tools like "keytool" from the command line. *
+ * <p>This class is an abstract class extended by KeyStoreProviderJCEKS and KeyStoreProviderPKCS12
  *
  * @author christian
  */
-public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
+public abstract class AbstractKeyStoreProvider implements BeanNameAware, KeyStoreProvider {
 
-    public static final String DEFAULT_BEAN_NAME = "DefaultKeyStoreProvider";
-    public static final String DEFAULT_FILE_NAME = "geoserver.jceks";
-    public static final String PREPARED_FILE_NAME = "geoserver.jceks.new";
+    private static final String PREPARED_FILE_NAME_ENDING = ".new";
 
     public static final String CONFIGPASSWORDKEY = "config:password:key";
-    public static final String URLPARAMKEY = "url:param:key";
     public static final String USERGROUP_PREFIX = "ug:";
     public static final String USERGROUP_POSTFIX = ":key";
 
@@ -51,11 +48,15 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
     protected Resource keyStoreResource;
     protected KeyStore ks;
 
-    public static final String KEYSTORETYPE = "JCEKS";
-
     GeoServerSecurityManager securityManager;
 
-    public KeyStoreProviderImpl() {}
+    abstract String getKeyStoreType();
+
+    abstract String getFileName();
+
+    abstract String getKeyAlgorithm();
+
+    public AbstractKeyStoreProvider() {}
 
     @Override
     public void setBeanName(String name) {
@@ -81,7 +82,7 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
     @Override
     public Resource getResource() {
         if (keyStoreResource == null) {
-            keyStoreResource = securityManager.security().get(DEFAULT_FILE_NAME);
+            keyStoreResource = securityManager.security().get(getFileName());
         }
         return keyStoreResource;
     }
@@ -206,7 +207,7 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
     }
 
     /**
-     * Opens or creates a {@link KeyStore} using the file {@link #DEFAULT_FILE_NAME}
+     * Opens or creates a {@link KeyStore}
      *
      * <p>Throws an exception for an invalid master key
      */
@@ -215,7 +216,7 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
 
         char[] passwd = securityManager.getMasterPassword();
         try {
-            ks = KeyStore.getInstance(KEYSTORETYPE);
+            ks = KeyStore.getInstance(getKeyStoreType());
             if (getResource().getType() == Type.UNDEFINED) { // create an empy one
                 ks.load(null, passwd);
                 addInitialKeys();
@@ -227,9 +228,9 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
                     ks.load(fis, passwd);
                 }
             }
+        } catch (IOException ioex) {
+            throw ioex;
         } catch (Exception ex) {
-            if (ex instanceof IOException exception) // avoid useless wrapping
-            throw exception;
             throw new IOException(ex);
         } finally {
             securityManager.disposePassword(passwd);
@@ -246,7 +247,7 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
 
         KeyStore testStore = null;
         try {
-            testStore = KeyStore.getInstance(KEYSTORETYPE);
+            testStore = KeyStore.getInstance(getKeyStoreType());
         } catch (KeyStoreException e1) {
             // should not happen, see assertActivatedKeyStore
             throw new RuntimeException(e1);
@@ -269,7 +270,7 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
     @Override
     public void setSecretKey(String alias, char[] key) throws IOException {
         assertActivatedKeyStore();
-        SecretKey mySecretKey = new SecretKeySpec(toBytes(key), "PBE");
+        SecretKey mySecretKey = new SecretKeySpec(toBytes(key), getKeyAlgorithm());
         KeyStore.SecretKeyEntry skEntry = new KeyStore.SecretKeyEntry(mySecretKey);
         char[] passwd = securityManager.getMasterPassword();
         try {
@@ -339,18 +340,18 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
     public void prepareForMasterPasswordChange(char[] oldPassword, char[] newPassword) throws IOException {
 
         Resource dir = getResource().parent();
-        Resource newKSFile = dir.get(PREPARED_FILE_NAME);
+        Resource newKSFile = dir.get(getFileName() + PREPARED_FILE_NAME_ENDING);
         if (newKSFile.getType() != Type.UNDEFINED) {
             newKSFile.delete();
         }
 
         try {
-            KeyStore oldKS = KeyStore.getInstance(KEYSTORETYPE);
+            KeyStore oldKS = KeyStore.getInstance(getKeyStoreType());
             try (InputStream fin = getResource().in()) {
                 oldKS.load(fin, oldPassword);
             }
 
-            KeyStore newKS = KeyStore.getInstance(KEYSTORETYPE);
+            KeyStore newKS = KeyStore.getInstance(getKeyStoreType());
             newKS.load(null, newPassword);
             KeyStore.PasswordProtection protectionparam = new KeyStore.PasswordProtection(newPassword);
 
@@ -392,8 +393,8 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
     @Override
     public void commitMasterPasswordChange() throws IOException {
         Resource dir = getResource().parent();
-        Resource newKSFile = dir.get(PREPARED_FILE_NAME);
-        Resource oldKSFile = dir.get(DEFAULT_FILE_NAME);
+        Resource newKSFile = dir.get(getFileName() + PREPARED_FILE_NAME_ENDING);
+        Resource oldKSFile = dir.get(getFileName());
 
         if (newKSFile.getType() == Type.UNDEFINED) {
             return; // nothing to do
@@ -408,7 +409,7 @@ public class KeyStoreProviderImpl implements BeanNameAware, KeyStoreProvider {
         char[] passwd = securityManager.getMasterPassword();
         try {
             try (InputStream fin = newKSFile.in()) {
-                KeyStore newKS = KeyStore.getInstance(KEYSTORETYPE);
+                KeyStore newKS = KeyStore.getInstance(getKeyStoreType());
                 newKS.load(fin, passwd);
 
                 // to be sure, decrypt all keys

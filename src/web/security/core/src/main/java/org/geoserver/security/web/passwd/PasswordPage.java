@@ -24,6 +24,7 @@ public class PasswordPage extends AbstractSecurityPage {
         add(form);
 
         form.add(new MasterPasswordProviderChoice("providerName"));
+        form.add(new MasterPasswordKeystoreChoice("keystoreType"));
         form.add(new Link<>("changePassword") {
             @Override
             public void onClick() {
@@ -44,6 +45,7 @@ public class PasswordPage extends AbstractSecurityPage {
                 MasterPasswordConfig config = (MasterPasswordConfig) getForm().getModelObject();
                 try {
                     getSecurityManager().saveMasterPasswordConfig(config);
+                    getSecurityManager().reloadKeyStoreFromConfig();
                     doReturn();
                 } catch (Exception e) {
                     error(e);
