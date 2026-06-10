@@ -32,7 +32,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncoder {
 
     StandardPBEStringEncryptor stringEncrypter;
-    StandardPBEByteEncryptor byteEncrypter;
+    LegacyPBEByteEncryptor byteEncrypter;
 
     private String providerName, algorithm;
     private String keyAliasInKeyStore = KeyStoreProviderImpl.CONFIGPASSWORDKEY;
@@ -105,7 +105,7 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
         byte[] password = lookupPasswordFromKeyStore();
         char[] chars = toChars(password);
 
-        byteEncrypter = new StandardPBEByteEncryptor();
+        byteEncrypter = new LegacyPBEByteEncryptor();
         byteEncrypter.setPasswordCharArray(chars);
 
         if (getProviderName() != null && !getProviderName().isEmpty()) {
