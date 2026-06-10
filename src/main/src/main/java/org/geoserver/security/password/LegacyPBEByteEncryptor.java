@@ -28,18 +28,24 @@ final class LegacyPBEByteEncryptor {
     private String providerName;
     private String algorithm;
     private Integer saltSizeBytes;
+    private Integer computedSaltSizeBytes;
     private int keyObtentionIterations = DEFAULT_KEY_OBTENTION_ITERATIONS;
 
     void setPasswordCharArray(char[] password) {
+        if (this.password != null) {
+            Arrays.fill(this.password, '\0');
+        }
         this.password = password == null ? null : Arrays.copyOf(password, password.length);
     }
 
     void setProviderName(String providerName) {
         this.providerName = providerName;
+        this.computedSaltSizeBytes = null;
     }
 
     void setAlgorithm(String algorithm) {
         this.algorithm = algorithm;
+        this.computedSaltSizeBytes = null;
     }
 
     void setSaltSizeBytes(int saltSizeBytes) {
@@ -61,11 +67,16 @@ final class LegacyPBEByteEncryptor {
             return null;
         }
 
-        byte[] salt = new byte[getSaltSizeBytes()];
-        RANDOM.nextBytes(salt);
+        try {
+            byte[] salt = new byte[getSaltSizeBytes()];
+            RANDOM.nextBytes(salt);
 
-        byte[] encrypted = doFinal(Cipher.ENCRYPT_MODE, message, salt);
-        return concat(salt, encrypted);
+            byte[] encrypted = doFinal(Cipher.ENCRYPT_MODE, message, salt);
+            return concat(salt, encrypted);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(
+                    "Unable to encrypt message using algorithm '" + algorithm + "' ", e);
+        }
     }
 
     byte[] decrypt(byte[] encryptedMessage) {
@@ -73,22 +84,27 @@ final class LegacyPBEByteEncryptor {
             return null;
         }
 
-        int effectiveSaltSizeBytes = getSaltSizeBytes();
-        if (encryptedMessage.length <= effectiveSaltSizeBytes) {
-            throw new IllegalArgumentException("Encrypted message is shorter than the configured salt size");
+        try {
+            int effectiveSaltSizeBytes = getSaltSizeBytes();
+            if (encryptedMessage.length <= effectiveSaltSizeBytes) {
+                throw new IllegalArgumentException("Encrypted message does not contain both salt and ciphertext");
+            }
+
+            byte[] salt = Arrays.copyOfRange(encryptedMessage, 0, effectiveSaltSizeBytes);
+            byte[] encrypted = Arrays.copyOfRange(encryptedMessage, effectiveSaltSizeBytes, encryptedMessage.length);
+
+            return doFinal(Cipher.DECRYPT_MODE, encrypted, salt);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException(
+                    "Unable to decrypt message using algorithm '" + algorithm + "' ", e);
         }
-
-        byte[] salt = Arrays.copyOfRange(encryptedMessage, 0, effectiveSaltSizeBytes);
-        byte[] encrypted = Arrays.copyOfRange(encryptedMessage, effectiveSaltSizeBytes, encryptedMessage.length);
-
-        return doFinal(Cipher.DECRYPT_MODE, encrypted, salt);
     }
 
-    private byte[] doFinal(int mode, byte[] input, byte[] salt) {
+    private byte[] doFinal(int mode, byte[] input, byte[] salt) throws GeneralSecurityException {
         checkInitialized();
 
+        PBEKeySpec keySpec = new PBEKeySpec(password);
         try {
-            PBEKeySpec keySpec = new PBEKeySpec(password);
             SecretKeyFactory keyFactory = newSecretKeyFactory();
             SecretKey key = keyFactory.generateSecret(keySpec);
 
@@ -98,32 +114,27 @@ final class LegacyPBEByteEncryptor {
             cipher.init(mode, key, parameterSpec);
 
             return cipher.doFinal(input);
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("Unable to process PBE message using algorithm: " + algorithm, e);
+        } finally {
+            keySpec.clearPassword();
         }
     }
 
-    private int getSaltSizeBytes() {
+    private int getSaltSizeBytes() throws GeneralSecurityException {
         if (saltSizeBytes != null) {
             return saltSizeBytes;
         }
 
-        int algorithmBlockSize = getAlgorithmBlockSize();
-        if (algorithmBlockSize > 0) {
-            return algorithmBlockSize;
+        if (computedSaltSizeBytes == null) {
+            int algorithmBlockSize = getAlgorithmBlockSize();
+            computedSaltSizeBytes = algorithmBlockSize > 0 ? algorithmBlockSize : DEFAULT_SALT_SIZE_BYTES;
         }
 
-        return DEFAULT_SALT_SIZE_BYTES;
+        return computedSaltSizeBytes;
     }
 
-    private int getAlgorithmBlockSize() {
+    private int getAlgorithmBlockSize() throws GeneralSecurityException {
         checkInitialized();
-
-        try {
-            return newCipher().getBlockSize();
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("Unable to determine block size for algorithm: " + algorithm, e);
-        }
+        return newCipher().getBlockSize();
     }
 
     private SecretKeyFactory newSecretKeyFactory() throws GeneralSecurityException {
