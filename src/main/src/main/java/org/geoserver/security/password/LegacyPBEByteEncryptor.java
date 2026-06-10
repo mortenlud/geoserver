@@ -22,8 +22,6 @@ final class LegacyPBEByteEncryptor {
     private static final int DEFAULT_SALT_SIZE_BYTES = 8;
     private static final int DEFAULT_KEY_OBTENTION_ITERATIONS = 1000;
 
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     private char[] password;
     private String providerName;
     private String algorithm;
@@ -32,9 +30,7 @@ final class LegacyPBEByteEncryptor {
     private int keyObtentionIterations = DEFAULT_KEY_OBTENTION_ITERATIONS;
 
     void setPasswordCharArray(char[] password) {
-        if (this.password != null) {
-            Arrays.fill(this.password, '\0');
-        }
+        clearPassword();
         this.password = password == null ? null : Arrays.copyOf(password, password.length);
     }
 
@@ -68,14 +64,11 @@ final class LegacyPBEByteEncryptor {
         }
 
         try {
-            byte[] salt = new byte[getSaltSizeBytes()];
-            RANDOM.nextBytes(salt);
-
+            byte[] salt = generateSalt();
             byte[] encrypted = doFinal(Cipher.ENCRYPT_MODE, message, salt);
             return concat(salt, encrypted);
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(
-                    "Unable to encrypt message using algorithm '" + algorithm + "' ", e);
+            throw new IllegalStateException("Unable to encrypt message using algorithm '" + algorithm + "'", e);
         }
     }
 
@@ -85,18 +78,17 @@ final class LegacyPBEByteEncryptor {
         }
 
         try {
-            int effectiveSaltSizeBytes = getSaltSizeBytes();
-            if (encryptedMessage.length <= effectiveSaltSizeBytes) {
+            int saltLength = getSaltSizeBytes();
+            if (encryptedMessage.length <= saltLength) {
                 throw new IllegalArgumentException("Encrypted message does not contain both salt and ciphertext");
             }
 
-            byte[] salt = Arrays.copyOfRange(encryptedMessage, 0, effectiveSaltSizeBytes);
-            byte[] encrypted = Arrays.copyOfRange(encryptedMessage, effectiveSaltSizeBytes, encryptedMessage.length);
+            byte[] salt = Arrays.copyOfRange(encryptedMessage, 0, saltLength);
+            byte[] encrypted = Arrays.copyOfRange(encryptedMessage, saltLength, encryptedMessage.length);
 
             return doFinal(Cipher.DECRYPT_MODE, encrypted, salt);
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(
-                    "Unable to decrypt message using algorithm '" + algorithm + "' ", e);
+            throw new IllegalStateException("Unable to decrypt message using algorithm '" + algorithm + "'", e);
         }
     }
 
@@ -105,9 +97,7 @@ final class LegacyPBEByteEncryptor {
 
         PBEKeySpec keySpec = new PBEKeySpec(password);
         try {
-            SecretKeyFactory keyFactory = newSecretKeyFactory();
-            SecretKey key = keyFactory.generateSecret(keySpec);
-
+            SecretKey key = newSecretKeyFactory().generateSecret(keySpec);
             AlgorithmParameterSpec parameterSpec = new PBEParameterSpec(salt, keyObtentionIterations);
 
             Cipher cipher = newCipher();
@@ -119,17 +109,27 @@ final class LegacyPBEByteEncryptor {
         }
     }
 
+    private byte[] generateSalt() throws GeneralSecurityException {
+        byte[] salt = new byte[getSaltSizeBytes()];
+        random().nextBytes(salt);
+        return salt;
+    }
+
     private int getSaltSizeBytes() throws GeneralSecurityException {
         if (saltSizeBytes != null) {
             return saltSizeBytes;
         }
 
         if (computedSaltSizeBytes == null) {
-            int algorithmBlockSize = getAlgorithmBlockSize();
-            computedSaltSizeBytes = algorithmBlockSize > 0 ? algorithmBlockSize : DEFAULT_SALT_SIZE_BYTES;
+            computedSaltSizeBytes = computeSaltSizeBytes();
         }
 
         return computedSaltSizeBytes;
+    }
+
+    private int computeSaltSizeBytes() throws GeneralSecurityException {
+        int blockSize = getAlgorithmBlockSize();
+        return blockSize > 0 ? blockSize : DEFAULT_SALT_SIZE_BYTES;
     }
 
     private int getAlgorithmBlockSize() throws GeneralSecurityException {
@@ -138,14 +138,14 @@ final class LegacyPBEByteEncryptor {
     }
 
     private SecretKeyFactory newSecretKeyFactory() throws GeneralSecurityException {
-        if (providerName != null && !providerName.isEmpty()) {
+        if (hasProviderName()) {
             return SecretKeyFactory.getInstance(algorithm, providerName);
         }
         return SecretKeyFactory.getInstance(algorithm);
     }
 
     private Cipher newCipher() throws GeneralSecurityException {
-        if (providerName != null && !providerName.isEmpty()) {
+        if (hasProviderName()) {
             return Cipher.getInstance(algorithm, providerName);
         }
         return Cipher.getInstance(algorithm);
@@ -155,9 +155,23 @@ final class LegacyPBEByteEncryptor {
         if (password == null) {
             throw new IllegalStateException("Password has not been configured");
         }
-        if (algorithm == null || algorithm.isEmpty()) {
+        if (isBlank(algorithm)) {
             throw new IllegalStateException("Algorithm has not been configured");
         }
+    }
+
+    private boolean hasProviderName() {
+        return !isBlank(providerName);
+    }
+
+    private void clearPassword() {
+        if (password != null) {
+            Arrays.fill(password, '\0');
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isEmpty();
     }
 
     private static byte[] concat(byte[] first, byte[] second) {
@@ -165,5 +179,13 @@ final class LegacyPBEByteEncryptor {
         System.arraycopy(first, 0, output, 0, first.length);
         System.arraycopy(second, 0, output, first.length, second.length);
         return output;
+    }
+
+    private static SecureRandom random() {
+        return SecureRandomHolder.INSTANCE;
+    }
+
+    private static final class SecureRandomHolder {
+        private static final SecureRandom INSTANCE = new SecureRandom();
     }
 }

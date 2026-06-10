@@ -57,3 +57,4 @@ test_conversion
 mkdocs_output/
 .hypothesis*
 venv/
+.aider*
