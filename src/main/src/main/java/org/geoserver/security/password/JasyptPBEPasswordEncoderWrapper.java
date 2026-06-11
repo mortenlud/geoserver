@@ -5,10 +5,7 @@
 package org.geoserver.security.password;
 
 import java.util.Objects;
-import org.jasypt.encryption.pbe.PBEStringEncryptor;
 import org.jasypt.exceptions.EncryptionInitializationException;
-import org.jasypt.util.text.BasicTextEncryptor;
-import org.jasypt.util.text.TextEncryptor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -20,9 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * @author vickdw Created on 10/23/18
  */
 public class JasyptPBEPasswordEncoderWrapper extends AbstractGeoserverPasswordEncoder implements PasswordEncoder {
-    private TextEncryptor textEncryptor = null;
-    private PBEStringEncryptor pbeStringEncryptor = null;
-    private Boolean useTextEncryptor = null;
+    private LegacyPBEEncryptor pbeStringEncryptor = null;
 
     public JasyptPBEPasswordEncoderWrapper() {}
 
@@ -60,33 +55,21 @@ public class JasyptPBEPasswordEncoderWrapper extends AbstractGeoserverPasswordEn
         };
     }
 
-    public void setTextEncryptor(TextEncryptor textEncryptor) {
-        this.textEncryptor = textEncryptor;
-        this.useTextEncryptor = Boolean.TRUE;
-    }
-
-    public void setPbeStringEncryptor(PBEStringEncryptor pbeStringEncryptor) {
+    void setPbeStringEncryptor(LegacyPBEEncryptor pbeStringEncryptor) {
         this.pbeStringEncryptor = pbeStringEncryptor;
-        this.useTextEncryptor = Boolean.FALSE;
     }
 
     @Override
     public String encodePassword(String rawPass, Object salt) {
         this.checkInitialization();
-        return this.useTextEncryptor ? this.textEncryptor.encrypt(rawPass) : this.pbeStringEncryptor.encrypt(rawPass);
+        return this.pbeStringEncryptor.encrypt(rawPass);
     }
 
     @Override
     public boolean isPasswordValid(String encPass, String rawPass, Object salt) {
         this.checkInitialization();
-        String decPassword = null;
-        if (this.useTextEncryptor) {
-            decPassword = this.textEncryptor.decrypt(encPass);
-        } else {
-            decPassword = this.pbeStringEncryptor.decrypt(encPass);
-        }
 
-        return Objects.equals(decPassword, rawPass);
+        return Objects.equals(this.pbeStringEncryptor.decrypt(encPass), rawPass);
     }
 
     @Override
@@ -95,15 +78,7 @@ public class JasyptPBEPasswordEncoderWrapper extends AbstractGeoserverPasswordEn
     }
 
     private synchronized void checkInitialization() {
-        if (this.useTextEncryptor == null) {
-            this.textEncryptor = new BasicTextEncryptor();
-            this.useTextEncryptor = Boolean.TRUE;
-        } else if (this.useTextEncryptor) {
-            if (this.textEncryptor == null) {
-                throw new EncryptionInitializationException(
-                        "PBE Password encoder not initialized: text encryptor is null");
-            }
-        } else if (this.pbeStringEncryptor == null) {
+        if (this.pbeStringEncryptor == null) {
             throw new EncryptionInitializationException(
                     "PBE Password encoder not initialized: PBE string encryptor is null");
         }

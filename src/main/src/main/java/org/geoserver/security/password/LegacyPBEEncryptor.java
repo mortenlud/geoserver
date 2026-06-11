@@ -4,6 +4,7 @@
  */
 package org.geoserver.security.password;
 
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
@@ -13,11 +14,13 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
+import org.geoserver.security.SecurityUtils;
 
 /**
- * Minimal backward-compatible replacement for Jasypt's {@code StandardPBEByteEncryptor}.
+ * Minimal backward-compatible replacement for Jasypt's {@code StandardPBEByteEncryptor} and
+ * {@code StandardPBEStringEncryptor} .
  */
-final class LegacyPBEByteEncryptor {
+final class LegacyPBEEncryptor {
 
     private static final int DEFAULT_SALT_SIZE_BYTES = 8;
     private static final int DEFAULT_KEY_OBTENTION_ITERATIONS = 1000;
@@ -56,6 +59,34 @@ final class LegacyPBEByteEncryptor {
             throw new IllegalArgumentException("Key obtention iterations must be greater than zero");
         }
         this.keyObtentionIterations = keyObtentionIterations;
+    }
+
+    String encrypt(String message) {
+        if (message == null) {
+            return null;
+        }
+
+        try {
+            byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
+            byte[] encryptedBytes = encrypt(messageBytes);
+            return java.util.Base64.getEncoder().encodeToString(encryptedBytes);
+        } catch (Exception e) {
+            throw new RuntimeException("Encryption failed", e);
+        }
+    }
+
+    String decrypt(String encryptedMessage) {
+        if (encryptedMessage == null) {
+            return null;
+        }
+
+        try {
+            byte[] encryptedBytes = java.util.Base64.getDecoder().decode(encryptedMessage);
+            byte[] decryptedBytes = decrypt(encryptedBytes);
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("Decryption failed", e);
+        }
     }
 
     byte[] encrypt(byte[] message) {
@@ -164,9 +195,9 @@ final class LegacyPBEByteEncryptor {
         return !isBlank(providerName);
     }
 
-    private void clearPassword() {
+    void clearPassword() {
         if (password != null) {
-            Arrays.fill(password, '\0');
+            SecurityUtils.scramble(password);
         }
     }
 

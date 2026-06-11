@@ -29,7 +29,7 @@ class LegacyPBEByteEncryptorTest {
     @Test
     void testPbeWithMd5AndDesCanDecryptJasyptEncryptedBytes() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHMD5ANDDES", null);
-        LegacyPBEByteEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        LegacyPBEEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
 
         byte[] encrypted = jasyptEncryptor.encrypt(MESSAGE);
 
@@ -39,7 +39,7 @@ class LegacyPBEByteEncryptorTest {
     @Test
     void testPbeWithMd5AndDesCanBeDecryptedByJasypt() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHMD5ANDDES", null);
-        LegacyPBEByteEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        LegacyPBEEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
 
         byte[] encrypted = legacyEncryptor.encrypt(MESSAGE);
 
@@ -47,11 +47,10 @@ class LegacyPBEByteEncryptorTest {
     }
 
     @Test
-    void testPbeWithSha256And256BitAesCbcBcCanDecryptJasyptEncryptedBytes() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        StandardPBEByteEncryptor jasyptEncryptor =
-                createJasyptEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
-        LegacyPBEByteEncryptor legacyEncryptor =
-                createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+    void testPbeWithSha256And256BitAesCbcBcCanDecryptJasyptEncryptedBytes()
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        LegacyPBEEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
 
         byte[] encrypted = jasyptEncryptor.encrypt(MESSAGE);
 
@@ -60,10 +59,8 @@ class LegacyPBEByteEncryptorTest {
 
     @Test
     void testPbeWithSha256And256BitAesCbcBcCanBeDecryptedByJasypt() {
-        StandardPBEByteEncryptor jasyptEncryptor =
-                createJasyptEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
-        LegacyPBEByteEncryptor legacyEncryptor =
-                createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        LegacyPBEEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
 
         byte[] encrypted = legacyEncryptor.encrypt(MESSAGE);
 
@@ -81,8 +78,8 @@ class LegacyPBEByteEncryptorTest {
         return encryptor;
     }
 
-    private static LegacyPBEByteEncryptor createLegacyEncryptor(String algorithm, String providerName) {
-        LegacyPBEByteEncryptor encryptor = new LegacyPBEByteEncryptor();
+    private static LegacyPBEEncryptor createLegacyEncryptor(String algorithm, String providerName) {
+        LegacyPBEEncryptor encryptor = new LegacyPBEEncryptor();
         encryptor.setPasswordCharArray(PASSWORD);
         encryptor.setAlgorithm(algorithm);
         if (providerName != null) {
