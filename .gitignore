@@ -53,6 +53,9 @@ src/web/app/.temp-Start*
 .vscode/
 test_conversion
 
+#Agents
+AGENTS.md
+
 # MkDocs build output
 mkdocs_output/
 .hypothesis*
