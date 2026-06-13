@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import org.apache.commons.codec.binary.Base64;
 import org.jasypt.digest.StandardByteDigester;
 import org.junit.jupiter.api.Test;
@@ -57,7 +58,7 @@ class LegacyPasswordByteDigesterTest {
     }
 
     @Test
-    void testToShortEncodedPassword() {
+    void testTooShortEncodedPassword() {
         LegacyPasswordByteDigester simpleByteDigester = new LegacyPasswordByteDigester();
 
         String encoded = "Na";
@@ -73,7 +74,8 @@ class LegacyPasswordByteDigesterTest {
         jasyptDigester.setSaltSizeBytes(16);
         jasyptDigester.initialize();
 
-        String jasyptEncoded = new String(Base64.encodeBase64(jasyptDigester.digest("password".getBytes())));
+        String jasyptEncoded =
+                new String(Base64.encodeBase64(jasyptDigester.digest("password".getBytes())), StandardCharsets.UTF_8);
 
         LegacyPasswordByteDigester simpleByteDigester = new LegacyPasswordByteDigester();
 
