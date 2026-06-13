@@ -22,7 +22,7 @@ import org.apache.wicket.util.crypt.ICrypt;
 import org.apache.wicket.util.crypt.ICryptFactory;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerSecurityManager;
-import org.geoserver.security.password.LegacyPBEEncryptor;
+import org.geoserver.security.password.GeoServerPBEEncryptor;
 import org.geotools.util.logging.Logging;
 
 /**
@@ -50,9 +50,9 @@ public class GeoserverWicketEncrypterFactory implements ICryptFactory {
     };
 
     static class CryptImpl extends AbstractCrypt {
-        protected LegacyPBEEncryptor enc;
+        protected GeoServerPBEEncryptor enc;
 
-        CryptImpl(LegacyPBEEncryptor enc) {
+        CryptImpl(GeoServerPBEEncryptor enc) {
             this.enc = enc;
         }
 
@@ -98,7 +98,7 @@ public class GeoserverWicketEncrypterFactory implements ICryptFactory {
         GeoServerSecurityManager manager = GeoServerApplication.get().getSecurityManager();
         char[] key = manager.getRandomPassworddProvider().getRandomPasswordWithDefaultLength();
 
-        LegacyPBEEncryptor enc = new LegacyPBEEncryptor();
+        GeoServerPBEEncryptor enc = new GeoServerPBEEncryptor();
         enc.setPasswordCharArray(key);
         // since the password is copied, we can scramble it
         manager.disposePassword(key);

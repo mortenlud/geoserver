@@ -8,19 +8,19 @@ import java.util.Objects;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * Wrapper class for {@link LegacyPBEEncryptor} enabling the class to return the Spring version of PasswordEncoder
+ * Wrapper class for {@link GeoServerPBEEncryptor} enabling the class to return the Spring version of PasswordEncoder
  *
  * <p>Used by {@link GeoServerPBEPasswordEncoder}
  *
  * @author vickdw Created on 10/23/18
  */
-public class LegacyPBEPasswordEncoderWrapper implements PasswordEncoder {
+public class PBEPasswordEncoderWrapper implements PasswordEncoder {
 
-    private LegacyPBEEncryptor encryptor;
+    private GeoServerPBEEncryptor encryptor;
 
-    public LegacyPBEPasswordEncoderWrapper() {}
+    public PBEPasswordEncoderWrapper() {}
 
-    public void setPbeStringEncryptor(LegacyPBEEncryptor encryptor) {
+    public void setPbeStringEncryptor(GeoServerPBEEncryptor encryptor) {
         this.encryptor = encryptor;
     }
 

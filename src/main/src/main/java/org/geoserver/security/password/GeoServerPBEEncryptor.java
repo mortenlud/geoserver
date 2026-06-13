@@ -16,7 +16,18 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 import org.geoserver.security.SecurityUtils;
 
-public final class LegacyPBEEncryptor {
+/**
+ * Drop-in replacement for Jasypt's {@code StandardPBEByteEncryptor} and {@code StandardPBEStringEncryptor}.
+ *
+ * <p>Produces ciphertext in the same wire format (random salt prepended to raw ciphertext, no framing headers),
+ * ensuring full backward compatibility with passwords encrypted by earlier versions of GeoServer that used Jasypt
+ * directly.
+ *
+ * <p>Supports any PBE algorithm available through the JCA providers (e.g. {@code PBEWITHMD5ANDDES},
+ * {@code PBEWITHSHA256AND256BITAES-CBC-BC} with Bouncy Castle). Salt size is auto-computed from the algorithm's block
+ * size by default.
+ */
+public final class GeoServerPBEEncryptor {
 
     private static final int DEFAULT_SALT_SIZE_BYTES = 8;
     private static final int DEFAULT_KEY_OBTENTION_ITERATIONS = 1000;

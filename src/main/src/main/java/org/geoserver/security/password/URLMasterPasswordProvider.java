@@ -104,7 +104,7 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         }
 
         // encrypt the password
-        LegacyPBEEncryptor encryptor = new LegacyPBEEncryptor();
+        GeoServerPBEEncryptor encryptor = new GeoServerPBEEncryptor();
 
         char[] key = key();
         try {
@@ -122,7 +122,7 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         }
 
         // decrypt the password
-        LegacyPBEEncryptor encryptor = new LegacyPBEEncryptor();
+        GeoServerPBEEncryptor encryptor = new GeoServerPBEEncryptor();
         char[] key = key();
         try {
             encryptor.setPasswordCharArray(key);
