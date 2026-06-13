@@ -160,8 +160,7 @@ public class GeoServerPBEPasswordEncoderTest {
         passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
         passwordEncoder.setPrefix("crypto1");
 
-        assertThrows(Exception.class,
-                () -> passwordEncoder.decode("crypto1:!!!invalid-base64!!!"));
+        assertThrows(Exception.class, () -> passwordEncoder.decode("crypto1:!!!invalid-base64!!!"));
     }
 
     @Test

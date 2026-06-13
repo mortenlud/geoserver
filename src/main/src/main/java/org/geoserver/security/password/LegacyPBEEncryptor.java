@@ -20,7 +20,7 @@ import org.geoserver.security.SecurityUtils;
  * Minimal backward-compatible replacement for Jasypt's {@code StandardPBEByteEncryptor} and
  * {@code StandardPBEStringEncryptor} .
  */
-final class LegacyPBEEncryptor {
+public final class LegacyPBEEncryptor {
 
     private static final int DEFAULT_SALT_SIZE_BYTES = 8;
     private static final int DEFAULT_KEY_OBTENTION_ITERATIONS = 1000;
@@ -32,36 +32,36 @@ final class LegacyPBEEncryptor {
     private Integer computedSaltSizeBytes;
     private int keyObtentionIterations = DEFAULT_KEY_OBTENTION_ITERATIONS;
 
-    void setPasswordCharArray(char[] password) {
+    public void setPasswordCharArray(char[] password) {
         clearPassword();
         this.password = password == null ? null : Arrays.copyOf(password, password.length);
     }
 
-    void setProviderName(String providerName) {
+    public void setProviderName(String providerName) {
         this.providerName = providerName;
         this.computedSaltSizeBytes = null;
     }
 
-    void setAlgorithm(String algorithm) {
+    public void setAlgorithm(String algorithm) {
         this.algorithm = algorithm;
         this.computedSaltSizeBytes = null;
     }
 
-    void setSaltSizeBytes(int saltSizeBytes) {
+    public void setSaltSizeBytes(int saltSizeBytes) {
         if (saltSizeBytes <= 0) {
             throw new IllegalArgumentException("Salt size must be greater than zero");
         }
         this.saltSizeBytes = saltSizeBytes;
     }
 
-    void setKeyObtentionIterations(int keyObtentionIterations) {
+    public void setKeyObtentionIterations(int keyObtentionIterations) {
         if (keyObtentionIterations <= 0) {
             throw new IllegalArgumentException("Key obtention iterations must be greater than zero");
         }
         this.keyObtentionIterations = keyObtentionIterations;
     }
 
-    String encrypt(String message) {
+    public String encrypt(String message) {
         if (message == null) {
             return null;
         }
@@ -75,7 +75,7 @@ final class LegacyPBEEncryptor {
         }
     }
 
-    String decrypt(String encryptedMessage) {
+    public String decrypt(String encryptedMessage) {
         if (encryptedMessage == null) {
             return null;
         }
@@ -89,7 +89,7 @@ final class LegacyPBEEncryptor {
         }
     }
 
-    byte[] encrypt(byte[] message) {
+    public byte[] encrypt(byte[] message) {
         if (message == null) {
             return null;
         }
@@ -103,7 +103,7 @@ final class LegacyPBEEncryptor {
         }
     }
 
-    byte[] decrypt(byte[] encryptedMessage) {
+    public byte[] decrypt(byte[] encryptedMessage) {
         if (encryptedMessage == null) {
             return null;
         }
@@ -195,7 +195,7 @@ final class LegacyPBEEncryptor {
         return !isBlank(providerName);
     }
 
-    void clearPassword() {
+    public void clearPassword() {
         if (password != null) {
             SecurityUtils.scramble(password);
         }

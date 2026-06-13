@@ -167,10 +167,6 @@
       <version>1.0</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.jasypt</groupId>
-      <artifactId>jasypt</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>

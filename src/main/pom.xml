@@ -234,10 +234,7 @@
     <dependency>
       <groupId>org.jasypt</groupId>
       <artifactId>jasypt</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jasypt</groupId>
-      <artifactId>jasypt-springsecurity3</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>

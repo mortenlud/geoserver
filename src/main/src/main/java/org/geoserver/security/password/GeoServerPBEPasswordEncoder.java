@@ -84,7 +84,7 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
             }
             legacyPBEEncryptor.setAlgorithm(getAlgorithm());
 
-            JasyptPBEPasswordEncoderWrapper encoder = new JasyptPBEPasswordEncoderWrapper();
+            LegacyPBEPasswordEncoderWrapper encoder = new LegacyPBEPasswordEncoderWrapper();
             encoder.setPbeStringEncryptor(legacyPBEEncryptor);
 
             return encoder;
