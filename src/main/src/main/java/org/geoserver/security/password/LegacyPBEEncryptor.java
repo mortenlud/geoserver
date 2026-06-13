@@ -16,10 +16,6 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 import org.geoserver.security.SecurityUtils;
 
-/**
- * Minimal backward-compatible replacement for Jasypt's {@code StandardPBEByteEncryptor} and
- * {@code StandardPBEStringEncryptor} .
- */
 public final class LegacyPBEEncryptor {
 
     private static final int DEFAULT_SALT_SIZE_BYTES = 8;
@@ -29,8 +25,9 @@ public final class LegacyPBEEncryptor {
     private String providerName;
     private String algorithm;
     private Integer saltSizeBytes;
-    private Integer computedSaltSizeBytes;
     private int keyObtentionIterations = DEFAULT_KEY_OBTENTION_ITERATIONS;
+
+    private Integer cachedBlockSize;
 
     public void setPasswordCharArray(char[] password) {
         clearPassword();
@@ -39,12 +36,12 @@ public final class LegacyPBEEncryptor {
 
     public void setProviderName(String providerName) {
         this.providerName = providerName;
-        this.computedSaltSizeBytes = null;
+        this.cachedBlockSize = null;
     }
 
     public void setAlgorithm(String algorithm) {
         this.algorithm = algorithm;
-        this.computedSaltSizeBytes = null;
+        this.cachedBlockSize = null;
     }
 
     public void setSaltSizeBytes(int saltSizeBytes) {
@@ -140,34 +137,6 @@ public final class LegacyPBEEncryptor {
         }
     }
 
-    private byte[] generateSalt() throws GeneralSecurityException {
-        byte[] salt = new byte[getSaltSizeBytes()];
-        random().nextBytes(salt);
-        return salt;
-    }
-
-    private int getSaltSizeBytes() throws GeneralSecurityException {
-        if (saltSizeBytes != null) {
-            return saltSizeBytes;
-        }
-
-        if (computedSaltSizeBytes == null) {
-            computedSaltSizeBytes = computeSaltSizeBytes();
-        }
-
-        return computedSaltSizeBytes;
-    }
-
-    private int computeSaltSizeBytes() throws GeneralSecurityException {
-        int blockSize = getAlgorithmBlockSize();
-        return blockSize > 0 ? blockSize : DEFAULT_SALT_SIZE_BYTES;
-    }
-
-    private int getAlgorithmBlockSize() throws GeneralSecurityException {
-        checkInitialized();
-        return newCipher().getBlockSize();
-    }
-
     private SecretKeyFactory newSecretKeyFactory() throws GeneralSecurityException {
         if (hasProviderName()) {
             return SecretKeyFactory.getInstance(algorithm, providerName);
@@ -180,6 +149,23 @@ public final class LegacyPBEEncryptor {
             return Cipher.getInstance(algorithm, providerName);
         }
         return Cipher.getInstance(algorithm);
+    }
+
+    private byte[] generateSalt() throws GeneralSecurityException {
+        byte[] salt = new byte[getSaltSizeBytes()];
+        random().nextBytes(salt);
+        return salt;
+    }
+
+    private int getSaltSizeBytes() throws GeneralSecurityException {
+        if (saltSizeBytes != null) {
+            return saltSizeBytes;
+        }
+        if (cachedBlockSize == null) {
+            checkInitialized();
+            cachedBlockSize = newCipher().getBlockSize();
+        }
+        return cachedBlockSize > 0 ? cachedBlockSize : DEFAULT_SALT_SIZE_BYTES;
     }
 
     private void checkInitialized() {
