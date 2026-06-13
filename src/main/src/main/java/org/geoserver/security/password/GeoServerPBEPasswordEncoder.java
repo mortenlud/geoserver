@@ -12,10 +12,7 @@ import static org.geoserver.security.SecurityUtils.toChars;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Base64;
-import org.geoserver.security.GeoServerSecurityManager;
-import org.geoserver.security.GeoServerUserGroupService;
-import org.geoserver.security.KeyStoreProvider;
-import org.geoserver.security.KeyStoreProviderImpl;
+import org.geoserver.security.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**

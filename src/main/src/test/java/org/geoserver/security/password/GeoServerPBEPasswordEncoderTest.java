@@ -1,5 +1,10 @@
 package org.geoserver.security.password;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
@@ -9,20 +14,17 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.IOException;
-
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.when;
-
 public class GeoServerPBEPasswordEncoderTest {
 
     @Mock
     private GeoServerSecurityManager securityManager;
+
     @Mock
     private KeyStoreProvider keyStoreProvider;
+
     @Mock
     private GeoServerUserGroupService userGroupService;
+
     @Mock
     private Resource resource;
 
@@ -40,8 +42,8 @@ public class GeoServerPBEPasswordEncoderTest {
         when(keyStoreProvider.hasUserGroupKey(anyString())).thenReturn(true);
         when(keyStoreProvider.aliasForGroupService(anyString())).thenReturn("testAlias");
         when(keyStoreProvider.containsAlias(anyString())).thenReturn(true);
-        when(keyStoreProvider.getSecretKey(anyString())).thenReturn(
-                new javax.crypto.spec.SecretKeySpec("testKey123".getBytes(), "DES"));
+        when(keyStoreProvider.getSecretKey(anyString()))
+                .thenReturn(new javax.crypto.spec.SecretKeySpec("testKey123".getBytes(), "DES"));
 
         passwordEncoder.initialize(securityManager);
         passwordEncoder.initializeFor(userGroupService);
@@ -56,8 +58,7 @@ public class GeoServerPBEPasswordEncoderTest {
         String encoded = passwordEncoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertNotEquals(original, encoded);
-        assertTrue("Encoded string should start with the specified prefix",
-                encoded.startsWith("crypto1"));
+        assertTrue("Encoded string should start with the specified prefix", encoded.startsWith("crypto1"));
 
         String decoded = passwordEncoder.decode(encoded);
         assertNotNull(decoded);
@@ -72,8 +73,7 @@ public class GeoServerPBEPasswordEncoderTest {
         char[] original = "testPassword123".toCharArray();
         String encoded = passwordEncoder.encodePassword(original, null);
         assertNotNull(encoded);
-        assertTrue("Encoded string should start with the specified prefix",
-                encoded.startsWith("crypto1"));
+        assertTrue("Encoded string should start with the specified prefix", encoded.startsWith("crypto1"));
 
         char[] decoded = passwordEncoder.decodeToCharArray(encoded);
         assertNotNull(decoded);
@@ -90,8 +90,7 @@ public class GeoServerPBEPasswordEncoderTest {
         String encoded = passwordEncoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertNotEquals(original, encoded);
-        assertTrue("Encoded string should start with the specified prefix",
-                encoded.startsWith("crypto2"));
+        assertTrue("Encoded string should start with the specified prefix", encoded.startsWith("crypto2"));
 
         String decoded = passwordEncoder.decode(encoded);
         assertNotNull(decoded);
@@ -107,8 +106,7 @@ public class GeoServerPBEPasswordEncoderTest {
         char[] original = "testPassword123".toCharArray();
         String encoded = passwordEncoder.encodePassword(original, null);
         assertNotNull(encoded);
-        assertTrue("Encoded string should start with the specified prefix",
-                encoded.startsWith("crypto2"));
+        assertTrue("Encoded string should start with the specified prefix", encoded.startsWith("crypto2"));
 
         char[] decoded = passwordEncoder.decodeToCharArray(encoded);
         assertNotNull(decoded);
