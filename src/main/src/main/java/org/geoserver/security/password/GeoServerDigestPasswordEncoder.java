@@ -7,6 +7,7 @@ package org.geoserver.security.password;
 
 import static org.geoserver.security.SecurityUtils.scramble;
 
+import java.nio.charset.StandardCharsets;
 import org.geoserver.security.SecurityUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -58,7 +59,7 @@ public class GeoServerDigestPasswordEncoder extends AbstractGeoserverPasswordEnc
         return new CharArrayPasswordEncoder() {
             @Override
             public String encodePassword(char[] rawPassword, Object salt) {
-                byte[] bytes = SecurityUtils.toBytes(rawPassword);
+                byte[] bytes = SecurityUtils.toBytes(rawPassword, StandardCharsets.UTF_8);
                 try {
                     return digester.encode(bytes);
                 } finally {
@@ -68,7 +69,7 @@ public class GeoServerDigestPasswordEncoder extends AbstractGeoserverPasswordEnc
 
             @Override
             public boolean isPasswordValid(String encPassword, char[] rawPassword, Object salt) {
-                byte[] bytes = SecurityUtils.toBytes(rawPassword);
+                byte[] bytes = SecurityUtils.toBytes(rawPassword, StandardCharsets.UTF_8);
                 try {
                     return digester.matches(bytes, encPassword);
                 } finally {
@@ -103,7 +104,7 @@ public class GeoServerDigestPasswordEncoder extends AbstractGeoserverPasswordEnc
             for (int i = 0; i < charSequence.length(); i++) {
                 chars[i] = charSequence.charAt(i);
             }
-            return SecurityUtils.toBytes(chars);
+            return SecurityUtils.toBytes(chars, StandardCharsets.UTF_8);
         } finally {
             scramble(chars);
         }

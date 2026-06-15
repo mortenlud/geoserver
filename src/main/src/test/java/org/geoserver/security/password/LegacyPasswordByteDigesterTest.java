@@ -4,19 +4,19 @@
  */
 package org.geoserver.security.password;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.commons.codec.binary.Base64;
 import org.jasypt.digest.StandardByteDigester;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
-class LegacyPasswordByteDigesterTest {
+public class LegacyPasswordByteDigesterTest {
 
     @Test
-    void testEncodeDecode() {
+    public void testEncodeDecode() {
         LegacyPasswordByteDigester simpleByteDigester = new LegacyPasswordByteDigester();
 
         String encoded = simpleByteDigester.encode("password".getBytes());
@@ -27,7 +27,7 @@ class LegacyPasswordByteDigesterTest {
     }
 
     @Test
-    void testEmptyPassword() {
+    public void testEmptyPassword() {
         LegacyPasswordByteDigester simpleByteDigester = new LegacyPasswordByteDigester();
 
         String encoded = simpleByteDigester.encode("".getBytes());
@@ -38,7 +38,7 @@ class LegacyPasswordByteDigesterTest {
     }
 
     @Test
-    void testNullPassword() {
+    public void testNullPassword() {
         LegacyPasswordByteDigester simpleByteDigester = new LegacyPasswordByteDigester();
 
         String encoded = simpleByteDigester.encode("".getBytes());
@@ -48,7 +48,7 @@ class LegacyPasswordByteDigesterTest {
     }
 
     @Test
-    void testWrongEncodedPassword() {
+    public void testWrongEncodedPassword() {
         LegacyPasswordByteDigester simpleByteDigester = new LegacyPasswordByteDigester();
 
         String encoded = "not_A_Byte_Encoded_Password";
@@ -57,7 +57,7 @@ class LegacyPasswordByteDigesterTest {
     }
 
     @Test
-    void testToShortEncodedPassword() {
+    public void testToShortEncodedPassword() {
         LegacyPasswordByteDigester simpleByteDigester = new LegacyPasswordByteDigester();
 
         String encoded = "Na";
@@ -66,7 +66,7 @@ class LegacyPasswordByteDigesterTest {
     }
 
     @Test
-    void testJasyptCompatibility() {
+    public void testJasyptCompatibility() {
         StandardByteDigester jasyptDigester = new StandardByteDigester();
         jasyptDigester.setAlgorithm("SHA-256");
         jasyptDigester.setIterations(100000);

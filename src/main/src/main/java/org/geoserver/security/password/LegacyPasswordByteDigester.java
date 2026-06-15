@@ -25,7 +25,13 @@ final class LegacyPasswordByteDigester {
     private static final int ITERATIONS = 100_000;
     private static final int SALT_LENGTH = 16;
 
-    private static final SecureRandom random = new SecureRandom();
+    private static SecureRandom random() {
+        return SecureRandomHolder.INSTANCE;
+    }
+
+    private static final class SecureRandomHolder {
+        private static final SecureRandom INSTANCE = new SecureRandom();
+    }
 
     /**
      * Encodes the given password.
@@ -35,7 +41,7 @@ final class LegacyPasswordByteDigester {
      */
     public String encode(byte[] password) {
         byte[] salt = new byte[SALT_LENGTH];
-        random.nextBytes(salt);
+        random().nextBytes(salt);
 
         byte[] hash = digest(password, salt);
         return Base64.getEncoder().encodeToString(concat(salt, hash));
