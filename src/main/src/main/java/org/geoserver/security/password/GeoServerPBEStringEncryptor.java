@@ -2,6 +2,13 @@ package org.geoserver.security.password;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Drop-in replacement for Jasypt's {@code StandardPBEStringEncryptor}.
+ *
+ * <p>Produces ciphertext in the same wire format (random salt prepended to raw ciphertext, no framing headers),
+ * ensuring full backward compatibility with passwords encrypted by earlier versions of GeoServer that used Jasypt
+ * directly.
+ */
 public final class GeoServerPBEStringEncryptor {
     private final GeoServerPBEByteEncryptor byteEncryptor = new GeoServerPBEByteEncryptor();
 
