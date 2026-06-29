@@ -29,7 +29,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncoder {
 
-    GeoServerPBEEncryptor pbeEncryptor;
+    GeoServerPBEByteEncryptor pbeByteEncryptor;
+    GeoServerPBEStringEncryptor pbeStringEncryptor;
 
     private String providerName, algorithm;
     private String keyAliasInKeyStore = KeyStoreProviderImpl.CONFIGPASSWORDKEY;
@@ -79,16 +80,16 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
 
         char[] chars = toChars(password);
         try {
-            pbeEncryptor = new GeoServerPBEEncryptor();
-            pbeEncryptor.setPasswordCharArray(chars);
+            pbeStringEncryptor = new GeoServerPBEStringEncryptor();
+            pbeStringEncryptor.setPasswordCharArray(chars);
 
             if (getProviderName() != null && !getProviderName().isEmpty()) {
-                pbeEncryptor.setProviderName(getProviderName());
+                pbeStringEncryptor.setProviderName(getProviderName());
             }
-            pbeEncryptor.setAlgorithm(getAlgorithm());
+            pbeStringEncryptor.setAlgorithm(getAlgorithm());
 
             PBEPasswordEncoderWrapper encoder = new PBEPasswordEncoderWrapper();
-            encoder.setPbeStringEncryptor(pbeEncryptor);
+            encoder.setPbeStringEncryptor(pbeStringEncryptor);
 
             return encoder;
         } finally {
@@ -102,19 +103,19 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
         byte[] password = lookupPasswordFromKeyStore();
         char[] chars = toChars(password);
 
-        pbeEncryptor = new GeoServerPBEEncryptor();
-        pbeEncryptor.setPasswordCharArray(chars);
+        pbeByteEncryptor = new GeoServerPBEByteEncryptor();
+        pbeByteEncryptor.setPasswordCharArray(chars);
 
         if (getProviderName() != null && !getProviderName().isEmpty()) {
-            pbeEncryptor.setProviderName(getProviderName());
+            pbeByteEncryptor.setProviderName(getProviderName());
         }
-        pbeEncryptor.setAlgorithm(getAlgorithm());
+        pbeByteEncryptor.setAlgorithm(getAlgorithm());
 
         return new CharArrayPasswordEncoder() {
             @Override
             public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
                 byte[] decoded = Base64.getDecoder().decode(encPass.getBytes());
-                byte[] decrypted = pbeEncryptor.decrypt(decoded);
+                byte[] decrypted = pbeByteEncryptor.decrypt(decoded);
 
                 char[] chars = toChars(decrypted);
                 try {
@@ -129,7 +130,7 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
             public String encodePassword(char[] rawPass, Object salt) {
                 byte[] bytes = toBytes(rawPass);
                 try {
-                    return new String(Base64.getEncoder().encode(pbeEncryptor.encrypt(bytes)));
+                    return new String(Base64.getEncoder().encode(pbeByteEncryptor.encrypt(bytes)));
                 } finally {
                     scramble(bytes);
                 }
@@ -162,23 +163,23 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
 
     @Override
     public String decode(String encPass) throws UnsupportedOperationException {
-        if (pbeEncryptor == null) {
+        if (pbeStringEncryptor == null) {
             // not initialized
             getStringEncoder();
         }
 
-        return pbeEncryptor.decrypt(removePrefix(encPass));
+        return pbeStringEncryptor.decrypt(removePrefix(encPass));
     }
 
     @Override
     public char[] decodeToCharArray(String encPass) throws UnsupportedOperationException {
-        if (pbeEncryptor == null) {
+        if (pbeByteEncryptor == null) {
             // not initialized
             getCharEncoder();
         }
 
         byte[] decoded = Base64.getDecoder().decode(removePrefix(encPass).getBytes());
-        byte[] bytes = pbeEncryptor.decrypt(decoded);
+        byte[] bytes = pbeByteEncryptor.decrypt(decoded);
         try {
             return toChars(bytes);
         } finally {

@@ -4,7 +4,6 @@
  */
 package org.geoserver.security.password;
 
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
@@ -27,10 +26,18 @@ import org.geoserver.security.SecurityUtils;
  * {@code PBEWITHSHA256AND256BITAES-CBC-BC} with Bouncy Castle). Salt size is auto-computed from the algorithm's block
  * size by default.
  */
-public final class GeoServerPBEEncryptor {
+public final class GeoServerPBEByteEncryptor {
 
     private static final int DEFAULT_SALT_SIZE_BYTES = 8;
     private static final int DEFAULT_KEY_OBTENTION_ITERATIONS = 1000;
+
+    private static SecureRandom random() {
+        return SecureRandomHolder.INSTANCE;
+    }
+
+    private static final class SecureRandomHolder {
+        private static final SecureRandom INSTANCE = new SecureRandom();
+    }
 
     private char[] password;
     private String providerName;
@@ -67,34 +74,6 @@ public final class GeoServerPBEEncryptor {
             throw new IllegalArgumentException("Key obtention iterations must be greater than zero");
         }
         this.keyObtentionIterations = keyObtentionIterations;
-    }
-
-    public String encrypt(String message) {
-        if (message == null) {
-            return null;
-        }
-
-        try {
-            byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
-            byte[] encryptedBytes = encrypt(messageBytes);
-            return java.util.Base64.getEncoder().encodeToString(encryptedBytes);
-        } catch (Exception e) {
-            throw new RuntimeException("Encryption failed", e);
-        }
-    }
-
-    public String decrypt(String encryptedMessage) {
-        if (encryptedMessage == null) {
-            return null;
-        }
-
-        try {
-            byte[] encryptedBytes = java.util.Base64.getDecoder().decode(encryptedMessage);
-            byte[] decryptedBytes = decrypt(encryptedBytes);
-            return new String(decryptedBytes, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new RuntimeException("Decryption failed", e);
-        }
     }
 
     public byte[] encrypt(byte[] message) {
@@ -207,13 +186,5 @@ public final class GeoServerPBEEncryptor {
         System.arraycopy(first, 0, output, 0, first.length);
         System.arraycopy(second, 0, output, first.length, second.length);
         return output;
-    }
-
-    private static SecureRandom random() {
-        return SecureRandomHolder.INSTANCE;
-    }
-
-    private static final class SecureRandomHolder {
-        private static final SecureRandom INSTANCE = new SecureRandom();
     }
 }

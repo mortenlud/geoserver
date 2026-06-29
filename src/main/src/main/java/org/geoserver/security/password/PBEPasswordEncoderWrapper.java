@@ -8,7 +8,8 @@ import java.util.Objects;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * Wrapper class for {@link GeoServerPBEEncryptor} enabling the class to return the Spring version of PasswordEncoder
+ * Wrapper class for {@link GeoServerPBEByteEncryptor} enabling the class to return the Spring version of
+ * PasswordEncoder
  *
  * <p>Used by {@link GeoServerPBEPasswordEncoder}
  *
@@ -16,11 +17,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 public class PBEPasswordEncoderWrapper implements PasswordEncoder {
 
-    private GeoServerPBEEncryptor encryptor;
+    private GeoServerPBEStringEncryptor encryptor;
 
     public PBEPasswordEncoderWrapper() {}
 
-    public void setPbeStringEncryptor(GeoServerPBEEncryptor encryptor) {
+    public void setPbeStringEncryptor(GeoServerPBEStringEncryptor encryptor) {
         this.encryptor = encryptor;
     }
 
