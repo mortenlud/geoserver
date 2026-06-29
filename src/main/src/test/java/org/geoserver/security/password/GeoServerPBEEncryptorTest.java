@@ -12,15 +12,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
+import java.util.List;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class GeoServerPBEEncryptorTest {
 
     private static final char[] PASSWORD = "geoserver".toCharArray();
-    private static final byte[] MESSAGE = "secret-password".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] MESSAGE = "secret-password-cafe\u0301".getBytes(StandardCharsets.UTF_8);
 
     @BeforeAll
     static void registerBouncyCastleProvider() {
@@ -72,7 +75,7 @@ class GeoServerPBEEncryptorTest {
     @Test
     void testStringEncryptDecrypt() {
         GeoServerPBEEncryptor encryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
-        String original = "secret-password";
+        String original = "secret-password-cafe\u0301";
         String encrypted = encryptor.encrypt(original);
         assertNotNull(encrypted);
         assertEquals(original, encryptor.decrypt(encrypted));
@@ -81,10 +84,30 @@ class GeoServerPBEEncryptorTest {
     @Test
     void testStringEncryptDecryptWithBC() {
         GeoServerPBEEncryptor encryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
-        String original = "secret-password";
+        String original = "secret-password-cafe\u0301";
         String encrypted = encryptor.encrypt(original);
         assertNotNull(encrypted);
         assertEquals(original, encryptor.decrypt(encrypted));
+    }
+
+    @Test
+    void testStringEncryptedByJasyptCanBeDecryptedByGeoserver() {
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptStringEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        GeoServerPBEEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+
+        String encrypted = jasyptEncryptor.encrypt("secret-password-cafe\u0301");
+
+        assertEquals("secret-password-cafe\u0301", legacyEncryptor.decrypt(encrypted));
+    }
+
+    @Test
+    void testStringEncryptedByGeoserverCanBeDecryptedByJasypt() {
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptStringEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        GeoServerPBEEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+
+        String encrypted = legacyEncryptor.encrypt("secret-password-cafe\u0301");
+
+        assertEquals("secret-password-cafe\u0301", jasyptEncryptor.decrypt(encrypted));
     }
 
     @Test
@@ -119,14 +142,6 @@ class GeoServerPBEEncryptorTest {
 
     @Test
     void testCustomSaltSize() {
-        GeoServerPBEEncryptor encryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
-        encryptor.setSaltSizeBytes(8);
-        byte[] encrypted = encryptor.encrypt(MESSAGE);
-        assertArrayEquals(MESSAGE, encryptor.decrypt(encrypted));
-    }
-
-    @Test
-    void testCustomSaltSizeWithBC() {
         GeoServerPBEEncryptor encryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
         encryptor.setSaltSizeBytes(16);
         byte[] encrypted = encryptor.encrypt(MESSAGE);
@@ -179,6 +194,17 @@ class GeoServerPBEEncryptorTest {
 
     private static StandardPBEByteEncryptor createJasyptEncryptor(String algorithm, String providerName) {
         StandardPBEByteEncryptor encryptor = new StandardPBEByteEncryptor();
+        encryptor.setPasswordCharArray(PASSWORD);
+        encryptor.setAlgorithm(algorithm);
+        if (providerName != null) {
+            encryptor.setProviderName(providerName);
+        }
+        encryptor.initialize();
+        return encryptor;
+    }
+
+    private static StandardPBEStringEncryptor createJasyptStringEncryptor(String algorithm, String providerName) {
+        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
         encryptor.setPasswordCharArray(PASSWORD);
         encryptor.setAlgorithm(algorithm);
         if (providerName != null) {

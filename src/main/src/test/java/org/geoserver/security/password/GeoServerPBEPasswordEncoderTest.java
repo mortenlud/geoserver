@@ -66,7 +66,7 @@ public class GeoServerPBEPasswordEncoderTest {
         passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
         passwordEncoder.setPrefix("crypto1");
 
-        String original = "testPassword123";
+        String original = "testPasswordCafe\u0301";
         String encoded = passwordEncoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertNotEquals(original, encoded);
@@ -82,7 +82,7 @@ public class GeoServerPBEPasswordEncoderTest {
         passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
         passwordEncoder.setPrefix("crypto1");
 
-        char[] original = "testPassword123".toCharArray();
+        char[] original = "testPasswordCafe\u0301".toCharArray();
         String encoded = passwordEncoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertTrue(encoded.startsWith("crypto1"), "Encoded string should start with the specified prefix");
@@ -98,7 +98,7 @@ public class GeoServerPBEPasswordEncoderTest {
         passwordEncoder.setPrefix("crypto2");
         passwordEncoder.setProviderName("BC");
 
-        String original = "testPassword123";
+        String original = "testPasswordCafe\u0301";
         String encoded = passwordEncoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertNotEquals(original, encoded);
@@ -115,7 +115,7 @@ public class GeoServerPBEPasswordEncoderTest {
         passwordEncoder.setPrefix("crypto2");
         passwordEncoder.setProviderName("BC");
 
-        char[] original = "testPassword123".toCharArray();
+        char[] original = "testPasswordCafe\u0301".toCharArray();
         String encoded = passwordEncoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertTrue(encoded.startsWith("crypto2"), "Encoded string should start with the specified prefix");
@@ -154,7 +154,7 @@ public class GeoServerPBEPasswordEncoderTest {
         passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
         passwordEncoder.setPrefix("crypto1");
 
-        String encoded = passwordEncoder.encodePassword("testPassword123", null);
+        String encoded = passwordEncoder.encodePassword("testPasswordCafe\u0301", null);
 
         passwordEncoder.setPrefix("wrongPrefix");
         assertThrows(Exception.class, () -> passwordEncoder.decode(encoded));
@@ -173,7 +173,7 @@ public class GeoServerPBEPasswordEncoderTest {
         passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
         passwordEncoder.setPrefix("crypto1");
 
-        String original = "testPassword123";
+        String original = "testPasswordCafe\u0301";
         for (int i = 0; i < 5; i++) {
             String encoded = passwordEncoder.encodePassword(original, null);
             assertEquals(original, passwordEncoder.decode(encoded));
@@ -185,7 +185,7 @@ public class GeoServerPBEPasswordEncoderTest {
         passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
         passwordEncoder.setPrefix("crypto1");
 
-        String original = "testPassword123";
+        String original = "testPasswordCafe\u0301";
         String encoded = passwordEncoder.encode(original);
         assertNotNull(encoded);
         assertTrue(encoded.startsWith("crypto1"));
