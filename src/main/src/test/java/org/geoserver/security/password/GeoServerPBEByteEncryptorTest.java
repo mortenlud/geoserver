@@ -31,7 +31,7 @@ class GeoServerPBEByteEncryptorTest {
     @Test
     void testPbeWithMd5AndDesCanDecryptJasyptEncryptedBytes() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHMD5ANDDES", null);
-        GeoServerPBEByteEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEByteEncryptor legacyEncryptor = createGeoServerEncryptor("PBEWITHMD5ANDDES", null);
 
         byte[] encrypted = jasyptEncryptor.encrypt(MESSAGE);
 
@@ -41,7 +41,7 @@ class GeoServerPBEByteEncryptorTest {
     @Test
     void testPbeWithMd5AndDesCanBeDecryptedByJasypt() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHMD5ANDDES", null);
-        GeoServerPBEByteEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEByteEncryptor legacyEncryptor = createGeoServerEncryptor("PBEWITHMD5ANDDES", null);
 
         byte[] encrypted = legacyEncryptor.encrypt(MESSAGE);
 
@@ -51,7 +51,7 @@ class GeoServerPBEByteEncryptorTest {
     @Test
     void testPbeWithSha256And256BitAesCbcBcCanDecryptJasyptEncryptedBytes() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
-        GeoServerPBEByteEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        GeoServerPBEByteEncryptor legacyEncryptor = createGeoServerEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
 
         byte[] encrypted = jasyptEncryptor.encrypt(MESSAGE);
 
@@ -61,7 +61,7 @@ class GeoServerPBEByteEncryptorTest {
     @Test
     void testPbeWithSha256And256BitAesCbcBcCanBeDecryptedByJasypt() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
-        GeoServerPBEByteEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        GeoServerPBEByteEncryptor legacyEncryptor = createGeoServerEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
 
         byte[] encrypted = legacyEncryptor.encrypt(MESSAGE);
 
@@ -70,7 +70,7 @@ class GeoServerPBEByteEncryptorTest {
 
     @Test
     void testByteArrayEncryptDecryptEmpty() {
-        GeoServerPBEByteEncryptor encryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor("PBEWITHMD5ANDDES", null);
         byte[] encrypted = encryptor.encrypt(new byte[0]);
         assertNotNull(encrypted);
         assertArrayEquals(new byte[0], encryptor.decrypt(encrypted));
@@ -78,14 +78,14 @@ class GeoServerPBEByteEncryptorTest {
 
     @Test
     void testByteArrayEncryptNullReturnsNull() {
-        GeoServerPBEByteEncryptor encryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor("PBEWITHMD5ANDDES", null);
         assertNull(encryptor.encrypt((byte[]) null));
         assertNull(encryptor.decrypt((byte[]) null));
     }
 
     @Test
     void testCustomSaltSize() {
-        GeoServerPBEByteEncryptor encryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
         encryptor.setSaltSizeBytes(16);
         byte[] encrypted = encryptor.encrypt(MESSAGE);
         assertArrayEquals(MESSAGE, encryptor.decrypt(encrypted));
@@ -100,7 +100,7 @@ class GeoServerPBEByteEncryptorTest {
 
     @Test
     void testCustomKeyObtentionIterations() {
-        GeoServerPBEByteEncryptor encryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor("PBEWITHMD5ANDDES", null);
         encryptor.setKeyObtentionIterations(5000);
         byte[] encrypted = encryptor.encrypt(MESSAGE);
         assertArrayEquals(MESSAGE, encryptor.decrypt(encrypted));
@@ -115,7 +115,7 @@ class GeoServerPBEByteEncryptorTest {
 
     @Test
     void testClearPasswordChangesEncryptionKey() {
-        GeoServerPBEByteEncryptor encryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor("PBEWITHMD5ANDDES", null);
         byte[] encrypted = encryptor.encrypt(MESSAGE);
         encryptor.clearPassword();
         assertThrows(Exception.class, () -> encryptor.decrypt(encrypted));
@@ -146,7 +146,7 @@ class GeoServerPBEByteEncryptorTest {
         return encryptor;
     }
 
-    private static GeoServerPBEByteEncryptor createLegacyEncryptor(String algorithm, String providerName) {
+    private static GeoServerPBEByteEncryptor createGeoServerEncryptor(String algorithm, String providerName) {
         GeoServerPBEByteEncryptor encryptor = new GeoServerPBEByteEncryptor();
         encryptor.setPasswordCharArray(PASSWORD);
         encryptor.setAlgorithm(algorithm);

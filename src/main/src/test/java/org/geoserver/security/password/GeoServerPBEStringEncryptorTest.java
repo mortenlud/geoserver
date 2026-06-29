@@ -27,7 +27,7 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testStringEncryptDecrypt() {
-        GeoServerPBEStringEncryptor encryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor("PBEWITHMD5ANDDES", null);
         String original = "secret-password-cafe\u0301";
         String encrypted = encryptor.encrypt(original);
         assertNotNull(encrypted);
@@ -36,7 +36,7 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testStringEncryptDecryptWithBC() {
-        GeoServerPBEStringEncryptor encryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
         String original = "secret-password-cafe\u0301";
         String encrypted = encryptor.encrypt(original);
         assertNotNull(encrypted);
@@ -47,7 +47,7 @@ class GeoServerPBEStringEncryptorTest {
     void testStringEncryptedByJasyptCanBeDecryptedByGeoserver() {
         StandardPBEStringEncryptor jasyptEncryptor =
                 createJasyptStringEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
-        GeoServerPBEStringEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        GeoServerPBEStringEncryptor legacyEncryptor = createGeoServerEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
 
         String encrypted = jasyptEncryptor.encrypt("secret-password-cafe\u0301");
 
@@ -58,7 +58,7 @@ class GeoServerPBEStringEncryptorTest {
     void testStringEncryptedByGeoserverCanBeDecryptedByJasypt() {
         StandardPBEStringEncryptor jasyptEncryptor =
                 createJasyptStringEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
-        GeoServerPBEStringEncryptor legacyEncryptor = createLegacyEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
+        GeoServerPBEStringEncryptor legacyEncryptor = createGeoServerEncryptor("PBEWITHSHA256AND256BITAES-CBC-BC", "BC");
 
         String encrypted = legacyEncryptor.encrypt("secret-password-cafe\u0301");
 
@@ -67,7 +67,7 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testStringEncryptDecryptEmpty() {
-        GeoServerPBEStringEncryptor encryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor("PBEWITHMD5ANDDES", null);
         String encrypted = encryptor.encrypt("");
         assertNotNull(encrypted);
         assertEquals("", encryptor.decrypt(encrypted));
@@ -75,7 +75,7 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testStringEncryptNullReturnsNull() {
-        GeoServerPBEStringEncryptor encryptor = createLegacyEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor("PBEWITHMD5ANDDES", null);
         assertNull(encryptor.encrypt((String) null));
         assertNull(encryptor.decrypt((String) null));
     }
@@ -91,7 +91,7 @@ class GeoServerPBEStringEncryptorTest {
         return encryptor;
     }
 
-    private static GeoServerPBEStringEncryptor createLegacyEncryptor(String algorithm, String providerName) {
+    private static GeoServerPBEStringEncryptor createGeoServerEncryptor(String algorithm, String providerName) {
         GeoServerPBEStringEncryptor encryptor = new GeoServerPBEStringEncryptor();
         encryptor.setPasswordCharArray(PASSWORD);
         encryptor.setAlgorithm(algorithm);
