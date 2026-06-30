@@ -21,13 +21,9 @@ public final class GeoServerPBEStringEncryptor {
             return null;
         }
 
-        try {
-            byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
-            byte[] encryptedBytes = byteEncryptor.encrypt(messageBytes);
-            return java.util.Base64.getEncoder().encodeToString(encryptedBytes);
-        } catch (Exception e) {
-            throw new RuntimeException("Encryption failed", e);
-        }
+        byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
+        byte[] encryptedBytes = byteEncryptor.encrypt(messageBytes);
+        return java.util.Base64.getEncoder().encodeToString(encryptedBytes);
     }
 
     public String decrypt(String encryptedMessage) {
@@ -35,13 +31,9 @@ public final class GeoServerPBEStringEncryptor {
             return null;
         }
 
-        try {
-            byte[] encryptedBytes = java.util.Base64.getDecoder().decode(encryptedMessage);
-            byte[] decryptedBytes = byteEncryptor.decrypt(encryptedBytes);
-            return new String(decryptedBytes, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new RuntimeException("Decryption failed", e);
-        }
+        byte[] encryptedBytes = java.util.Base64.getDecoder().decode(encryptedMessage);
+        byte[] decryptedBytes = byteEncryptor.decrypt(encryptedBytes);
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
     }
 
     public void setPasswordCharArray(char[] password) {

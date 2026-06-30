@@ -1,7 +1,12 @@
+/* (c) 2026 Open Source Geospatial Foundation - all rights reserved
+ * This code is licensed under the GPL 2.0 license, available at the root
+ * application directory.
+ */
 package org.geoserver.security.password;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,6 +15,7 @@ import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.Base64;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
@@ -34,13 +40,11 @@ public class GeoServerPBEPasswordEncoderTest {
     @Mock
     private Resource resource;
 
-    private GeoServerPBEPasswordEncoder passwordEncoder;
     private AutoCloseable mockCloser;
 
     @BeforeEach
     public void setUp() throws IOException {
         mockCloser = MockitoAnnotations.openMocks(this);
-        passwordEncoder = new GeoServerPBEPasswordEncoder();
 
         when(securityManager.getKeyStoreProvider()).thenReturn(keyStoreProvider);
         when(userGroupService.getName()).thenReturn("testService");
@@ -51,9 +55,6 @@ public class GeoServerPBEPasswordEncoderTest {
         when(keyStoreProvider.containsAlias(anyString())).thenReturn(true);
         when(keyStoreProvider.getSecretKey(anyString()))
                 .thenReturn(new javax.crypto.spec.SecretKeySpec("testKey123".getBytes(), "DES"));
-
-        passwordEncoder.initialize(securityManager);
-        passwordEncoder.initializeFor(userGroupService);
     }
 
     @AfterEach
@@ -61,134 +62,232 @@ public class GeoServerPBEPasswordEncoderTest {
         mockCloser.close();
     }
 
+    /**
+     * Creates a fresh encoder fully initialized against the shared mocks.
+     *
+     * <p>Every test gets its own instance to avoid cross-test pollution through the lazily cached
+     * string and char encoders in {@link AbstractGeoserverPasswordEncoder}.
+     */
+    private GeoServerPBEPasswordEncoder createEncoder() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = new GeoServerPBEPasswordEncoder();
+        encoder.initialize(securityManager);
+        encoder.initializeFor(userGroupService);
+        return encoder;
+    }
+
     @Test
-    public void testEncryptDecryptStringPBEWITHMD5ANDDES() {
-        passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
-        passwordEncoder.setPrefix("crypto1");
+    public void testEncryptDecryptStringPBEWITHMD5ANDDES() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
 
         String original = "testPasswordCafe\u0301";
-        String encoded = passwordEncoder.encodePassword(original, null);
+        String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertNotEquals(original, encoded);
         assertTrue(encoded.startsWith("crypto1"), "Encoded string should start with the specified prefix");
 
-        String decoded = passwordEncoder.decode(encoded);
+        String decoded = encoder.decode(encoded);
         assertNotNull(decoded);
         assertArrayEquals(original.toCharArray(), decoded.toCharArray());
     }
 
     @Test
-    public void testEncryptDecryptByteArrayPBEWITHMD5ANDDES() {
-        passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
-        passwordEncoder.setPrefix("crypto1");
+    public void testEncryptDecryptByteArrayPBEWITHMD5ANDDES() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
 
         char[] original = "testPasswordCafe\u0301".toCharArray();
-        String encoded = passwordEncoder.encodePassword(original, null);
+        String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertTrue(encoded.startsWith("crypto1"), "Encoded string should start with the specified prefix");
 
-        char[] decoded = passwordEncoder.decodeToCharArray(encoded);
+        char[] decoded = encoder.decodeToCharArray(encoded);
         assertNotNull(decoded);
         assertArrayEquals(original, decoded);
     }
 
     @Test
-    public void testEncryptDecryptStringPBEWITHSHA256AND256BITAESCBCBC() {
-        passwordEncoder.setAlgorithm("PBEWITHSHA256AND256BITAES-CBC-BC");
-        passwordEncoder.setPrefix("crypto2");
-        passwordEncoder.setProviderName("BC");
+    public void testEncryptDecryptStringPBEWITHSHA256AND256BITAESCBCBC() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHSHA256AND256BITAES-CBC-BC");
+        encoder.setPrefix("crypto2");
+        encoder.setProviderName("BC");
 
         String original = "testPasswordCafe\u0301";
-        String encoded = passwordEncoder.encodePassword(original, null);
+        String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertNotEquals(original, encoded);
         assertTrue(encoded.startsWith("crypto2"), "Encoded string should start with the specified prefix");
 
-        String decoded = passwordEncoder.decode(encoded);
+        String decoded = encoder.decode(encoded);
         assertNotNull(decoded);
         assertArrayEquals(original.toCharArray(), decoded.toCharArray());
     }
 
     @Test
-    public void testEncryptDecryptByteArrayPBEWITHSHA256AND256BITAESCBCBC() {
-        passwordEncoder.setAlgorithm("PBEWITHSHA256AND256BITAES-CBC-BC");
-        passwordEncoder.setPrefix("crypto2");
-        passwordEncoder.setProviderName("BC");
+    public void testEncryptDecryptByteArrayPBEWITHSHA256AND256BITAESCBCBC() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHSHA256AND256BITAES-CBC-BC");
+        encoder.setPrefix("crypto2");
+        encoder.setProviderName("BC");
 
         char[] original = "testPasswordCafe\u0301".toCharArray();
-        String encoded = passwordEncoder.encodePassword(original, null);
+        String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertTrue(encoded.startsWith("crypto2"), "Encoded string should start with the specified prefix");
 
-        char[] decoded = passwordEncoder.decodeToCharArray(encoded);
+        char[] decoded = encoder.decodeToCharArray(encoded);
         assertNotNull(decoded);
         assertArrayEquals(original, decoded);
     }
 
     @Test
-    public void testEncryptDecryptEmptyPassword() {
-        passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
-        passwordEncoder.setPrefix("crypto1");
+    public void testEncryptDecryptEmptyPassword() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
 
-        String encoded = passwordEncoder.encodePassword("", null);
+        String encoded = encoder.encodePassword("", null);
         assertNotNull(encoded);
         assertTrue(encoded.startsWith("crypto1"));
 
-        String decoded = passwordEncoder.decode(encoded);
+        String decoded = encoder.decode(encoded);
         assertEquals("", decoded);
     }
 
     @Test
-    public void testEncryptDecryptSpecialCharacters() {
-        passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
-        passwordEncoder.setPrefix("crypto1");
+    public void testEncryptDecryptSpecialCharacters() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
 
         String original = "æøå!@#$%^&*()_+-=[]{}|;':\",./<>?~";
-        String encoded = passwordEncoder.encodePassword(original, null);
+        String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
-        assertEquals(original, passwordEncoder.decode(encoded));
+        assertEquals(original, encoder.decode(encoded));
     }
 
     @Test
-    public void testDecryptWithWrongPrefix() {
-        passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
-        passwordEncoder.setPrefix("crypto1");
+    public void testDecryptWithWrongPrefix() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
 
-        String encoded = passwordEncoder.encodePassword("testPasswordCafe\u0301", null);
+        String encoded = encoder.encodePassword("testPasswordCafe\u0301", null);
 
-        passwordEncoder.setPrefix("wrongPrefix");
-        assertThrows(Exception.class, () -> passwordEncoder.decode(encoded));
+        // changing the prefix causes prefix-stripping to leave the "crypto1:" trailer intact,
+        // which is not valid Base64 → decode throws
+        encoder.setPrefix("wrongPrefix");
+        assertThrows(Exception.class, () -> encoder.decode(encoded));
     }
 
     @Test
-    public void testDecryptCorruptedData() {
-        passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
-        passwordEncoder.setPrefix("crypto1");
+    public void testDecryptCorruptedData() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
 
-        assertThrows(Exception.class, () -> passwordEncoder.decode("crypto1:!!!invalid-base64!!!"));
+        assertThrows(Exception.class, () -> encoder.decode("crypto1:!!!invalid-base64!!!"));
     }
 
     @Test
-    public void testMultipleEncryptDecryptCycles() {
-        passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
-        passwordEncoder.setPrefix("crypto1");
+    public void testDecryptTruncatedData() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
+
+        // valid Base64 but decodes to fewer than the 8-byte salt → should fail
+        String truncated = "crypto1:" + Base64.getEncoder().encodeToString(new byte[3]);
+        assertThrows(IllegalArgumentException.class, () -> encoder.decode(truncated));
+    }
+
+    @Test
+    public void testMultipleEncryptDecryptCycles() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
 
         String original = "testPasswordCafe\u0301";
         for (int i = 0; i < 5; i++) {
-            String encoded = passwordEncoder.encodePassword(original, null);
-            assertEquals(original, passwordEncoder.decode(encoded));
+            String encoded = encoder.encodePassword(original, null);
+            assertEquals(original, encoder.decode(encoded));
         }
     }
 
     @Test
-    public void testEncodeCharSequence() {
-        passwordEncoder.setAlgorithm("PBEWITHMD5ANDDES");
-        passwordEncoder.setPrefix("crypto1");
+    public void testEncodeCharSequence() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
 
         String original = "testPasswordCafe\u0301";
-        String encoded = passwordEncoder.encode(original);
+        String encoded = encoder.encode(original);
         assertNotNull(encoded);
         assertTrue(encoded.startsWith("crypto1"));
-        assertEquals(original, passwordEncoder.decode(encoded));
+        assertEquals(original, encoder.decode(encoded));
+    }
+
+    @Test
+    public void testIsPasswordValidString() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
+
+        String password = "mySecretPassword";
+        String encoded = encoder.encodePassword(password, null);
+
+        assertTrue(encoder.isPasswordValid(encoded, password, null));
+        assertFalse(encoder.isPasswordValid(encoded, "wrongPassword", null));
+        assertFalse(encoder.isPasswordValid(null, password, null));
+    }
+
+    @Test
+    public void testIsPasswordValidCharArray() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
+
+        String password = "mySecretPassword";
+        String encoded = encoder.encodePassword(password, null);
+
+        assertTrue(encoder.isPasswordValid(encoded, password.toCharArray(), null));
+        assertFalse(encoder.isPasswordValid(encoded, "wrongPassword".toCharArray(), null));
+        assertFalse(encoder.isPasswordValid(null, password.toCharArray(), null));
+    }
+
+    @Test
+    public void testIsResponsibleForEncoding() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
+
+        assertTrue(encoder.isResponsibleForEncoding("crypto1:abcdef"));
+        assertFalse(encoder.isResponsibleForEncoding("other:abcdef"));
+        assertFalse(encoder.isResponsibleForEncoding(null));
+        assertFalse(encoder.isResponsibleForEncoding(""));
+    }
+
+    @Test
+    public void testCrossPathCompatibility() throws IOException {
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
+
+        String password = "crossPathTest";
+        String encoded = encoder.encodePassword(password, null);
+
+        // string path → char path: decodeToCharArray should match
+        char[] decodedChars = encoder.decodeToCharArray(encoded);
+        assertArrayEquals(password.toCharArray(), decodedChars);
+
+        // char path → string path: encode char array, decode string should match
+        String encodedFromChars = encoder.encodePassword(password.toCharArray(), null);
+        assertEquals(password, encoder.decode(encodedFromChars));
+
+        // isPasswordValid should work across both paths
+        assertTrue(encoder.isPasswordValid(encoded, password, null));
+        assertTrue(encoder.isPasswordValid(encoded, password.toCharArray(), null));
     }
 }
