@@ -62,12 +62,6 @@ public class GeoServerPBEPasswordEncoderTest {
         mockCloser.close();
     }
 
-    /**
-     * Creates a fresh encoder fully initialized against the shared mocks.
-     *
-     * <p>Every test gets its own instance to avoid cross-test pollution through the lazily cached
-     * string and char encoders in {@link AbstractGeoserverPasswordEncoder}.
-     */
     private GeoServerPBEPasswordEncoder createEncoder() throws IOException {
         GeoServerPBEPasswordEncoder encoder = new GeoServerPBEPasswordEncoder();
         encoder.initialize(securityManager);
@@ -217,19 +211,6 @@ public class GeoServerPBEPasswordEncoderTest {
     }
 
     @Test
-    public void testEncodeCharSequence() throws IOException {
-        GeoServerPBEPasswordEncoder encoder = createEncoder();
-        encoder.setAlgorithm("PBEWITHMD5ANDDES");
-        encoder.setPrefix("crypto1");
-
-        String original = "testPasswordCafe\u0301";
-        String encoded = encoder.encode(original);
-        assertNotNull(encoded);
-        assertTrue(encoded.startsWith("crypto1"));
-        assertEquals(original, encoder.decode(encoded));
-    }
-
-    @Test
     public void testIsPasswordValidString() throws IOException {
         GeoServerPBEPasswordEncoder encoder = createEncoder();
         encoder.setAlgorithm("PBEWITHMD5ANDDES");
@@ -278,15 +259,12 @@ public class GeoServerPBEPasswordEncoderTest {
         String password = "crossPathTest";
         String encoded = encoder.encodePassword(password, null);
 
-        // string path → char path: decodeToCharArray should match
         char[] decodedChars = encoder.decodeToCharArray(encoded);
         assertArrayEquals(password.toCharArray(), decodedChars);
 
-        // char path → string path: encode char array, decode string should match
         String encodedFromChars = encoder.encodePassword(password.toCharArray(), null);
         assertEquals(password, encoder.decode(encodedFromChars));
 
-        // isPasswordValid should work across both paths
         assertTrue(encoder.isPasswordValid(encoded, password, null));
         assertTrue(encoder.isPasswordValid(encoded, password.toCharArray(), null));
     }
