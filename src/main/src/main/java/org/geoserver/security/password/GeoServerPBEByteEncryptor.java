@@ -45,7 +45,7 @@ public final class GeoServerPBEByteEncryptor {
     private Integer saltSizeBytes;
     private int keyObtentionIterations = DEFAULT_KEY_OBTENTION_ITERATIONS;
 
-    private Integer cachedBlockSize;
+    private volatile Integer cachedBlockSize;
 
     public void setPasswordCharArray(char[] password) {
         clearPassword();
