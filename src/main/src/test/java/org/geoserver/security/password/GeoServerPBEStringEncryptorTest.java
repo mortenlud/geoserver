@@ -20,8 +20,8 @@ class GeoServerPBEStringEncryptorTest {
 
     private static final char[] PASSWORD = "geoserver".toCharArray();
     private static final String ORIGINAL = "secret-password-cafe\u0301";
-    private static final String ALGO_MD5_DES = "PBEWITHMD5ANDDES";
-    private static final String ALGO_SHA256_AES = "PBEWITHSHA256AND256BITAES-CBC-BC";
+    private static final String ALGORITHM_MD5_DES = "PBEWITHMD5ANDDES";
+    private static final String ALGORITHM_SHA256_AES = "PBEWITHSHA256AND256BITAES-CBC-BC";
     private static final String PROVIDER_BC = "BC";
 
     @BeforeAll
@@ -33,7 +33,7 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testEncryptDecryptMd5Des() {
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_MD5_DES, null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         String encrypted = encryptor.encrypt(ORIGINAL);
         assertNotNull(encrypted);
         assertEquals(ORIGINAL, encryptor.decrypt(encrypted));
@@ -41,7 +41,7 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testEncryptDecryptSha256() {
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_SHA256_AES, PROVIDER_BC);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
         String encrypted = encryptor.encrypt(ORIGINAL);
         assertNotNull(encrypted);
         assertEquals(ORIGINAL, encryptor.decrypt(encrypted));
@@ -49,8 +49,8 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testJasyptEncryptedMd5DesCanBeDecrypted() {
-        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(ALGO_MD5_DES, null);
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_MD5_DES, null);
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(ALGORITHM_MD5_DES, null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
 
         String encrypted = jasyptEncryptor.encrypt(ORIGINAL);
 
@@ -59,8 +59,8 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testGeoServerEncryptedMd5DesCanBeDecryptedByJasypt() {
-        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(ALGO_MD5_DES, null);
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_MD5_DES, null);
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(ALGORITHM_MD5_DES, null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
 
         String encrypted = encryptor.encrypt(ORIGINAL);
 
@@ -69,8 +69,8 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testJasyptEncryptedSha256CanBeDecrypted() {
-        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(ALGO_SHA256_AES, PROVIDER_BC);
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_SHA256_AES, PROVIDER_BC);
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
 
         String encrypted = jasyptEncryptor.encrypt(ORIGINAL);
 
@@ -79,8 +79,8 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testGeoServerEncryptedSha256CanBeDecryptedByJasypt() {
-        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(ALGO_SHA256_AES, PROVIDER_BC);
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_SHA256_AES, PROVIDER_BC);
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
 
         String encrypted = encryptor.encrypt(ORIGINAL);
 
@@ -89,7 +89,7 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testEncryptDecryptEmptyString() {
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_MD5_DES, null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         String encrypted = encryptor.encrypt("");
         assertNotNull(encrypted);
         assertEquals("", encryptor.decrypt(encrypted));
@@ -97,20 +97,20 @@ class GeoServerPBEStringEncryptorTest {
 
     @Test
     void testEncryptNullReturnsNull() {
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_MD5_DES, null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         assertNull(encryptor.encrypt((String) null));
         assertNull(encryptor.decrypt((String) null));
     }
 
     @Test
     void testDecryptInvalidBase64ThrowsException() {
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_MD5_DES, null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         assertThrows(RuntimeException.class, () -> encryptor.decrypt("!!not-base64!!"));
     }
 
     @Test
     void testDecryptTruncatedStringThrowsException() {
-        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGO_MD5_DES, null);
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         // valid Base64 but decodes to fewer bytes than the salt size requires
         String tooShort = "AAA=";
         Exception ex = assertThrows(RuntimeException.class, () -> encryptor.decrypt(tooShort));
@@ -120,7 +120,7 @@ class GeoServerPBEStringEncryptorTest {
     @Test
     void testEncryptWithoutPasswordThrowsException() {
         GeoServerPBEStringEncryptor encryptor = new GeoServerPBEStringEncryptor();
-        encryptor.setAlgorithm(ALGO_MD5_DES);
+        encryptor.setAlgorithm(ALGORITHM_MD5_DES);
         assertThrows(RuntimeException.class, () -> encryptor.encrypt(ORIGINAL));
     }
 
