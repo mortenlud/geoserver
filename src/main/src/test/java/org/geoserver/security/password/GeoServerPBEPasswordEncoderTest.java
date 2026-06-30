@@ -11,13 +11,19 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.geoserver.security.SecurityUtils.toBytes;
+import static org.geoserver.security.SecurityUtils.toChars;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.security.Security;
 import java.util.Base64;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.security.GeoServerSecurityManager;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+import org.junit.jupiter.api.BeforeAll;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.KeyStoreProvider;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +46,8 @@ public class GeoServerPBEPasswordEncoderTest {
     @Mock
     private Resource resource;
 
+    private static final byte[] KEYSTORE_PASSWORD_BYTES = toBytes("testKey123".toCharArray());
+
     private AutoCloseable mockCloser;
 
     @BeforeEach
@@ -54,12 +62,30 @@ public class GeoServerPBEPasswordEncoderTest {
         when(keyStoreProvider.aliasForGroupService(anyString())).thenReturn("testAlias");
         when(keyStoreProvider.containsAlias(anyString())).thenReturn(true);
         when(keyStoreProvider.getSecretKey(anyString()))
-                .thenReturn(new javax.crypto.spec.SecretKeySpec("testKey123".getBytes(), "DES"));
+                .thenReturn(new javax.crypto.spec.SecretKeySpec(KEYSTORE_PASSWORD_BYTES, "DES"));
+    }
+
+    @BeforeAll
+    public static void registerBouncyCastleProvider() {
+        if (Security.getProvider("BC") == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
     }
 
     @AfterEach
     public void tearDown() throws Exception {
         mockCloser.close();
+    }
+
+    private static StandardPBEStringEncryptor createJasyptEncryptor(String algorithm, String providerName) {
+        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+        encryptor.setPasswordCharArray(toChars(KEYSTORE_PASSWORD_BYTES));
+        encryptor.setAlgorithm(algorithm);
+        if (providerName != null) {
+            encryptor.setProviderName(providerName);
+        }
+        encryptor.initialize();
+        return encryptor;
     }
 
     private GeoServerPBEPasswordEncoder createEncoder() throws IOException {
@@ -267,5 +293,33 @@ public class GeoServerPBEPasswordEncoderTest {
 
         assertTrue(encoder.isPasswordValid(encoded, password, null));
         assertTrue(encoder.isPasswordValid(encoded, password.toCharArray(), null));
+    }
+
+    @Test
+    public void testJasyptEncryptedStringCanBeDecodedByPasswordEncoder() throws IOException {
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
+
+        String original = "testPasswordCafe\u0301";
+        String jasyptEncrypted = jasyptEncryptor.encrypt(original);
+
+        String prefixed = "crypto1:" + jasyptEncrypted;
+        assertEquals(original, encoder.decode(prefixed));
+    }
+
+    @Test
+    public void testPasswordEncoderEncodedStringCanBeDecryptedByJasypt() throws IOException {
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHMD5ANDDES", null);
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm("PBEWITHMD5ANDDES");
+        encoder.setPrefix("crypto1");
+
+        String original = "testPasswordCafe\u0301";
+        String encoded = encoder.encodePassword(original, null);
+
+        String stripped = encoded.substring("crypto1:".length());
+        assertEquals(original, jasyptEncryptor.decrypt(stripped));
     }
 }
