@@ -7,11 +7,52 @@ package org.geoserver.security.password;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 public class GeoServerArgon2DigestPasswordEncoderTest {
+
+    @Test
+    public void testDefaultConstructor() {
+        GeoServerArgon2DigestPasswordEncoder passwordEncoder = new GeoServerArgon2DigestPasswordEncoder();
+        passwordEncoder.setPrefix("digest2");
+
+        String encoded = passwordEncoder.encodePassword("password", null);
+        assertNotEquals("password", encoded);
+        assertTrue(encoded.startsWith("digest2:"));
+
+        assertTrue(passwordEncoder.isPasswordValid(encoded, "password", null));
+        assertFalse(passwordEncoder.isPasswordValid(encoded, "wrong_password", null));
+    }
+
+    @Test
+    public void testConstructorRejectsNonPositiveSaltLength() {
+        assertThrows(IllegalArgumentException.class, () -> new GeoServerArgon2DigestPasswordEncoder(0, 32, 1, 4096, 3));
+    }
+
+    @Test
+    public void testConstructorRejectsNonPositiveHashLength() {
+        assertThrows(IllegalArgumentException.class, () -> new GeoServerArgon2DigestPasswordEncoder(16, 0, 1, 4096, 3));
+    }
+
+    @Test
+    public void testConstructorRejectsNonPositiveParallelism() {
+        assertThrows(
+                IllegalArgumentException.class, () -> new GeoServerArgon2DigestPasswordEncoder(16, 32, 0, 4096, 3));
+    }
+
+    @Test
+    public void testConstructorRejectsNonPositiveMemory() {
+        assertThrows(IllegalArgumentException.class, () -> new GeoServerArgon2DigestPasswordEncoder(16, 32, 1, 0, 3));
+    }
+
+    @Test
+    public void testConstructorRejectsNonPositiveIterations() {
+        assertThrows(
+                IllegalArgumentException.class, () -> new GeoServerArgon2DigestPasswordEncoder(16, 32, 1, 4096, 0));
+    }
 
     @Test
     public void testEmptyPassword() {
