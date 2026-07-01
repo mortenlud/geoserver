@@ -70,17 +70,16 @@
     <property name="prefix" value="digest1" />    
   </bean>
 
-    <bean id="digest2PasswordEncoder"
-          class="org.geoserver.security.password.GeoServerArgon2DigestPasswordEncoder" scope="prototype">
-        <constructor-arg index="0" value="16"/>
-        <constructor-arg index="1" value="32"/>
-        <constructor-arg index="2" value="1"/>
-        <constructor-arg index="3" value="4096"/>
-        <constructor-arg index="4" value="3"/>
-        <property name="prefix" value="digest2" />
-    </bean>
-  
-    
+  <bean id="digest2PasswordEncoder"
+    class="org.geoserver.security.password.GeoServerArgon2DigestPasswordEncoder" scope="prototype">
+    <constructor-arg index="0" value="16"/>
+    <constructor-arg index="1" value="32"/>
+    <constructor-arg index="2" value="1"/>
+    <constructor-arg index="3" value="4096"/>
+    <constructor-arg index="4" value="3"/>
+    <property name="prefix" value="digest2" />
+  </bean>
+
   <!--
   Extensions can inject another class implementing org.geoserver.security.KeyStoreProvider   
   <bean id="keyStoreProvider" class="org.geoserver.security.KeyStoreProviderImpl" />
