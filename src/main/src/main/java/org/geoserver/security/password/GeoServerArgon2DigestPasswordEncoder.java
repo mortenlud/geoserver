@@ -4,15 +4,19 @@
  */
 package org.geoserver.security.password;
 
-import com.google.common.base.Preconditions;
+import java.nio.CharBuffer;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/** Password encoder backed by Argon2id. */
+/**
+ * Password encoder backed by Argon2id. Uses Spring Security's {@link Argon2PasswordEncoder} and produces a DIGEST-type
+ * encoding. This encoder is not reversible.
+ */
 public class GeoServerArgon2DigestPasswordEncoder extends AbstractGeoserverPasswordEncoder {
 
-    private final Argon2PasswordEncoder delegate;
+    private final Argon2PasswordEncoder argon2PasswordEncoder;
 
+    /** Default constructor using Argon2id standard parameters (16/32/1/4096/3). */
     public GeoServerArgon2DigestPasswordEncoder() {
         this(16, 32, 1, 4096, 3);
     }
@@ -26,18 +30,18 @@ public class GeoServerArgon2DigestPasswordEncoder extends AbstractGeoserverPassw
      */
     public GeoServerArgon2DigestPasswordEncoder(
             int saltLength, int hashLength, int parallelism, int memory, int iterations) {
-        Preconditions.checkArgument(saltLength > 0, "saltLength must be positive");
-        Preconditions.checkArgument(hashLength > 0, "hashLength must be positive");
-        Preconditions.checkArgument(parallelism > 0, "parallelism must be positive");
-        Preconditions.checkArgument(memory > 0, "memory must be positive");
-        Preconditions.checkArgument(iterations > 0, "iterations must be positive");
-        delegate = new Argon2PasswordEncoder(saltLength, hashLength, parallelism, memory, iterations);
+        if (saltLength <= 0) throw new IllegalArgumentException("saltLength must be positive");
+        if (hashLength <= 0) throw new IllegalArgumentException("hashLength must be positive");
+        if (parallelism <= 0) throw new IllegalArgumentException("parallelism must be positive");
+        if (memory <= 0) throw new IllegalArgumentException("memory must be positive");
+        if (iterations <= 0) throw new IllegalArgumentException("iterations must be positive");
+        argon2PasswordEncoder = new Argon2PasswordEncoder(saltLength, hashLength, parallelism, memory, iterations);
         setReversible(false);
     }
 
     @Override
     protected PasswordEncoder createStringEncoder() {
-        return delegate;
+        return argon2PasswordEncoder;
     }
 
     @Override
@@ -45,12 +49,12 @@ public class GeoServerArgon2DigestPasswordEncoder extends AbstractGeoserverPassw
         return new CharArrayPasswordEncoder() {
             @Override
             public String encodePassword(char[] rawPassword, Object salt) {
-                return delegate.encode(java.nio.CharBuffer.wrap(rawPassword));
+                return argon2PasswordEncoder.encode(CharBuffer.wrap(rawPassword));
             }
 
             @Override
             public boolean isPasswordValid(String encPassword, char[] rawPassword, Object salt) {
-                return delegate.matches(java.nio.CharBuffer.wrap(rawPassword), encPassword);
+                return argon2PasswordEncoder.matches(CharBuffer.wrap(rawPassword), encPassword);
             }
         };
     }
@@ -62,6 +66,6 @@ public class GeoServerArgon2DigestPasswordEncoder extends AbstractGeoserverPassw
 
     @Override
     public String encode(CharSequence rawPassword) {
-        return delegate.encode(rawPassword);
+        return argon2PasswordEncoder.encode(rawPassword);
     }
 }

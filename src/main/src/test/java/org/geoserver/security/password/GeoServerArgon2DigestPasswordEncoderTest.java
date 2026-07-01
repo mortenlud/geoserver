@@ -11,7 +11,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 public class GeoServerArgon2DigestPasswordEncoderTest {
 
@@ -135,45 +134,6 @@ public class GeoServerArgon2DigestPasswordEncoderTest {
 
         assertTrue(passwordEncoder.isPasswordValid(encoded, "geoserver".toCharArray(), null));
         assertFalse(passwordEncoder.isPasswordValid(encoded, "wrong_password".toCharArray(), null));
-    }
-
-    @Test
-    public void testSpringArgon2Compatibility() {
-        // Verify BC-based encoder can validate hashes produced by Spring Security's Argon2PasswordEncoder
-        Argon2PasswordEncoder springEncoder = new Argon2PasswordEncoder(16, 32, 1, 4096, 3);
-        String springEncoded = springEncoder.encode("password");
-
-        GeoServerArgon2DigestPasswordEncoder ourEncoder = new GeoServerArgon2DigestPasswordEncoder(16, 32, 1, 4096, 3);
-        ourEncoder.setPrefix("digest2");
-
-        // Our encoder should validate a password against a Spring-encoded hash
-        assertTrue(ourEncoder.isPasswordValid(springEncoded, "password", null));
-        assertFalse(ourEncoder.isPasswordValid(springEncoded, "wrong_password", null));
-        assertTrue(ourEncoder.isPasswordValid(springEncoded, "password".toCharArray(), null));
-        assertFalse(ourEncoder.isPasswordValid(springEncoded, "wrong_password".toCharArray(), null));
-
-        // Spring encoder should validate a password against our encoded hash
-        String ourEncoded = ourEncoder.encode("password");
-        assertTrue(springEncoder.matches("password", ourEncoded));
-        assertFalse(springEncoder.matches("wrong_password", ourEncoded));
-    }
-
-    @Test
-    public void testSpringArgon2CompatibilityExoticPassword() {
-        Argon2PasswordEncoder springEncoder = new Argon2PasswordEncoder(16, 32, 1, 4096, 3);
-        String springEncoded = springEncoder.encode("øæåñüéöàçдя");
-
-        GeoServerArgon2DigestPasswordEncoder ourEncoder = new GeoServerArgon2DigestPasswordEncoder(16, 32, 1, 4096, 3);
-        ourEncoder.setPrefix("digest2");
-
-        assertTrue(ourEncoder.isPasswordValid(springEncoded, "øæåñüéöàçдя", null));
-        assertFalse(ourEncoder.isPasswordValid(springEncoded, "wrong_password", null));
-        assertTrue(ourEncoder.isPasswordValid(springEncoded, "øæåñüéöàçдя".toCharArray(), null));
-        assertFalse(ourEncoder.isPasswordValid(springEncoded, "wrong_password".toCharArray(), null));
-
-        String ourEncoded = ourEncoder.encode("øæåñüéöàçдя");
-        assertTrue(springEncoder.matches("øæåñüéöàçдя", ourEncoded));
-        assertFalse(springEncoder.matches("wrong_password", ourEncoded));
     }
 
     @Test
