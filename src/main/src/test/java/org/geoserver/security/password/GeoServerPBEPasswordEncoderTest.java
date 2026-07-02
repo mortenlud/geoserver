@@ -4,6 +4,8 @@
  */
 package org.geoserver.security.password;
 
+import static org.geoserver.security.SecurityUtils.toBytes;
+import static org.geoserver.security.SecurityUtils.toChars;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,8 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.geoserver.security.SecurityUtils.toBytes;
-import static org.geoserver.security.SecurityUtils.toChars;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
@@ -22,11 +22,11 @@ import java.util.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.geoserver.platform.resource.Resource;
 import org.geoserver.security.GeoServerSecurityManager;
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.junit.jupiter.api.BeforeAll;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.KeyStoreProvider;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

@@ -114,7 +114,9 @@ class GeoServerPBEStringEncryptorTest {
         // valid Base64 but decodes to fewer bytes than the salt size requires
         String tooShort = "AAA=";
         Exception ex = assertThrows(RuntimeException.class, () -> encryptor.decrypt(tooShort));
-        assertTrue(ex.getMessage().contains("Encrypted message does not contain both salt and ciphertext"), "Expected ´Decryption failed´ was: " + ex.getMessage());
+        assertTrue(
+                ex.getMessage().contains("Encrypted message does not contain both salt and ciphertext"),
+                "Expected ´Decryption failed´ was: " + ex.getMessage());
     }
 
     @Test
