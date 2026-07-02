@@ -12,7 +12,6 @@ import org.geoserver.security.password.ConfigurationPasswordEncryptionHelper;
 import org.geotools.util.logging.Logging;
 import org.geowebcache.diskquota.jdbc.JDBCConfiguration;
 import org.geowebcache.diskquota.jdbc.JDBCConfiguration.ConnectionPoolConfiguration;
-import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
 
 /**
  * Helper class that encodes and decodes the JDBC connection pool password on demand
@@ -44,7 +43,7 @@ class JDBCPasswordEncryptionHelper {
                 String decoded = passwords.decode(password);
 
                 configuration = cloneAndSetPassword(configuration, decoded);
-            } catch (EncryptionOperationNotPossibleException e) {
+            } catch (RuntimeException e) {
                 // fine, it must have been a plain text password
                 LOGGER.log(Level.FINE, "Unencrypting the password failed, assuming it is a plain text one", e);
             }

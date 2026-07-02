@@ -20,11 +20,10 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.util.crypt.AbstractCrypt;
 import org.apache.wicket.util.crypt.ICrypt;
 import org.apache.wicket.util.crypt.ICryptFactory;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.security.GeoServerSecurityManager;
+import org.geoserver.security.password.GeoServerPBEByteEncryptor;
 import org.geotools.util.logging.Logging;
-import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 
 /**
  * Encryptor factory for apache wicket
@@ -51,9 +50,9 @@ public class GeoserverWicketEncrypterFactory implements ICryptFactory {
     };
 
     static class CryptImpl extends AbstractCrypt {
-        protected StandardPBEByteEncryptor enc;
+        protected GeoServerPBEByteEncryptor enc;
 
-        CryptImpl(StandardPBEByteEncryptor enc) {
+        CryptImpl(GeoServerPBEByteEncryptor enc) {
             this.enc = enc;
         }
 
@@ -99,13 +98,13 @@ public class GeoserverWicketEncrypterFactory implements ICryptFactory {
         GeoServerSecurityManager manager = GeoServerApplication.get().getSecurityManager();
         char[] key = manager.getRandomPassworddProvider().getRandomPasswordWithDefaultLength();
 
-        StandardPBEByteEncryptor enc = new StandardPBEByteEncryptor();
+        GeoServerPBEByteEncryptor enc = new GeoServerPBEByteEncryptor();
         enc.setPasswordCharArray(key);
         // since the password is copied, we can scramble it
         manager.disposePassword(key);
 
         if (manager.isStrongEncryptionAvailable()) {
-            enc.setProvider(new BouncyCastleProvider());
+            enc.setProviderName("BC");
             enc.setAlgorithm("PBEWITHSHA256AND128BITAES-CBC-BC");
         } else {
             // US export restrictions

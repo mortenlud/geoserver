@@ -16,8 +16,6 @@ import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.KeyStoreProvider;
 import org.geoserver.security.KeyStoreProviderImpl;
-import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
@@ -31,8 +29,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  */
 public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncoder {
 
-    StandardPBEStringEncryptor stringEncrypter;
-    StandardPBEByteEncryptor byteEncrypter;
+    GeoServerPBEByteEncryptor pbeByteEncryptor;
+    GeoServerPBEStringEncryptor pbeStringEncryptor;
 
     private String providerName, algorithm;
     private String keyAliasInKeyStore = KeyStoreProviderImpl.CONFIGPASSWORDKEY;
@@ -82,16 +80,16 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
 
         char[] chars = toChars(password);
         try {
-            stringEncrypter = new StandardPBEStringEncryptor();
-            stringEncrypter.setPasswordCharArray(chars);
+            pbeStringEncryptor = new GeoServerPBEStringEncryptor();
+            pbeStringEncryptor.setPasswordCharArray(chars);
 
             if (getProviderName() != null && !getProviderName().isEmpty()) {
-                stringEncrypter.setProviderName(getProviderName());
+                pbeStringEncryptor.setProviderName(getProviderName());
             }
-            stringEncrypter.setAlgorithm(getAlgorithm());
+            pbeStringEncryptor.setAlgorithm(getAlgorithm());
 
-            JasyptPBEPasswordEncoderWrapper encoder = new JasyptPBEPasswordEncoderWrapper();
-            encoder.setPbeStringEncryptor(stringEncrypter);
+            PBEPasswordEncoderWrapper encoder = new PBEPasswordEncoderWrapper();
+            encoder.setPbeStringEncryptor(pbeStringEncryptor);
 
             return encoder;
         } finally {
@@ -105,19 +103,19 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
         byte[] password = lookupPasswordFromKeyStore();
         char[] chars = toChars(password);
 
-        byteEncrypter = new StandardPBEByteEncryptor();
-        byteEncrypter.setPasswordCharArray(chars);
+        pbeByteEncryptor = new GeoServerPBEByteEncryptor();
+        pbeByteEncryptor.setPasswordCharArray(chars);
 
         if (getProviderName() != null && !getProviderName().isEmpty()) {
-            byteEncrypter.setProviderName(getProviderName());
+            pbeByteEncryptor.setProviderName(getProviderName());
         }
-        byteEncrypter.setAlgorithm(getAlgorithm());
+        pbeByteEncryptor.setAlgorithm(getAlgorithm());
 
         return new CharArrayPasswordEncoder() {
             @Override
             public boolean isPasswordValid(String encPass, char[] rawPass, Object salt) {
                 byte[] decoded = Base64.getDecoder().decode(encPass.getBytes());
-                byte[] decrypted = byteEncrypter.decrypt(decoded);
+                byte[] decrypted = pbeByteEncryptor.decrypt(decoded);
 
                 char[] chars = toChars(decrypted);
                 try {
@@ -132,7 +130,7 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
             public String encodePassword(char[] rawPass, Object salt) {
                 byte[] bytes = toBytes(rawPass);
                 try {
-                    return new String(Base64.getEncoder().encode(byteEncrypter.encrypt(bytes)));
+                    return new String(Base64.getEncoder().encode(pbeByteEncryptor.encrypt(bytes)));
                 } finally {
                     scramble(bytes);
                 }
@@ -165,23 +163,23 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
 
     @Override
     public String decode(String encPass) throws UnsupportedOperationException {
-        if (stringEncrypter == null) {
+        if (pbeStringEncryptor == null) {
             // not initialized
             getStringEncoder();
         }
 
-        return stringEncrypter.decrypt(removePrefix(encPass));
+        return pbeStringEncryptor.decrypt(removePrefix(encPass));
     }
 
     @Override
     public char[] decodeToCharArray(String encPass) throws UnsupportedOperationException {
-        if (byteEncrypter == null) {
+        if (pbeByteEncryptor == null) {
             // not initialized
             getCharEncoder();
         }
 
         byte[] decoded = Base64.getDecoder().decode(removePrefix(encPass).getBytes());
-        byte[] bytes = byteEncrypter.decrypt(decoded);
+        byte[] bytes = pbeByteEncryptor.decrypt(decoded);
         try {
             return toChars(bytes);
         } finally {
@@ -191,6 +189,6 @@ public class GeoServerPBEPasswordEncoder extends AbstractGeoserverPasswordEncode
 
     @Override
     public String encode(CharSequence rawPassword) {
-        return createCharEncoder().encodePassword(decodeToCharArray(rawPassword.toString()), null);
+        return encodePassword(rawPassword.toString(), null);
     }
 }

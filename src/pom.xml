@@ -718,11 +718,7 @@
         <groupId>org.jasypt</groupId>
         <artifactId>jasypt</artifactId>
         <version>${jasypt.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jasypt</groupId>
-        <artifactId>jasypt-springsecurity3</artifactId>
-        <version>${jasypt.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>

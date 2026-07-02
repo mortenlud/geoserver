@@ -33,7 +33,6 @@ import org.geoserver.security.config.SecurityNamedServiceConfig;
 import org.geoserver.security.validation.SecurityConfigException;
 import org.geoserver.security.validation.SecurityConfigValidator;
 import org.geotools.util.URLs;
-import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
 
 /**
  * Master password provider that retrieves and optionally stores the master password from a url.
@@ -105,11 +104,12 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         }
 
         // encrypt the password
-        StandardPBEByteEncryptor encryptor = new StandardPBEByteEncryptor();
+        GeoServerPBEByteEncryptor encryptor = new GeoServerPBEByteEncryptor();
 
         char[] key = key();
         try {
             encryptor.setPasswordCharArray(key);
+            encryptor.setAlgorithm("PBEWITHMD5ANDDES");
             return Base64.encodeBase64(encryptor.encrypt(toBytes(passwd)));
         } finally {
             scramble(key);
@@ -122,10 +122,11 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         }
 
         // decrypt the password
-        StandardPBEByteEncryptor encryptor = new StandardPBEByteEncryptor();
+        GeoServerPBEByteEncryptor encryptor = new GeoServerPBEByteEncryptor();
         char[] key = key();
         try {
             encryptor.setPasswordCharArray(key);
+            encryptor.setAlgorithm("PBEWITHMD5ANDDES");
             return encryptor.decrypt(Base64.decodeBase64(passwd));
         } finally {
             scramble(key);
