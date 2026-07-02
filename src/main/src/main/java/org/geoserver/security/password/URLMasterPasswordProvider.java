@@ -109,7 +109,6 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         char[] key = key();
         try {
             encryptor.setPasswordCharArray(key);
-            encryptor.setAlgorithm("PBEWITHMD5ANDDES");
             return Base64.encodeBase64(encryptor.encrypt(toBytes(passwd)));
         } finally {
             scramble(key);
@@ -126,7 +125,6 @@ public final class URLMasterPasswordProvider extends MasterPasswordProvider {
         char[] key = key();
         try {
             encryptor.setPasswordCharArray(key);
-            encryptor.setAlgorithm("PBEWITHMD5ANDDES");
             return encryptor.decrypt(Base64.decodeBase64(passwd));
         } finally {
             scramble(key);
