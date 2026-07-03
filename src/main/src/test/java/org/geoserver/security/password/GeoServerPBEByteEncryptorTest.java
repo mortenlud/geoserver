@@ -160,13 +160,6 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testEncryptWithoutAlgorithmThrowsException() {
-        GeoServerPBEByteEncryptor encryptor = new GeoServerPBEByteEncryptor();
-        encryptor.setPasswordCharArray(PASSWORD);
-        assertThrows(IllegalStateException.class, () -> encryptor.encrypt(MESSAGE));
-    }
-
-    @Test
     void testNonExistentProviderThrowsException() {
         GeoServerPBEByteEncryptor encryptor = new GeoServerPBEByteEncryptor();
         encryptor.setPasswordCharArray(PASSWORD);

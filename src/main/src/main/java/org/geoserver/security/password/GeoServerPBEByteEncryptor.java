@@ -27,7 +27,7 @@ import org.geoserver.security.SecurityUtils;
  * size by default.
  */
 public final class GeoServerPBEByteEncryptor {
-    public static final String ALGORITHM_MD5_DES = "PBEWITHMD5ANDDES";
+    public static final String ALGORITHM_MD5_DES = "PBEWithMD5AndDES";
 
     private static final int DEFAULT_SALT_SIZE_BYTES = 8;
     private static final int DEFAULT_KEY_OBTENTION_ITERATIONS = 1000;

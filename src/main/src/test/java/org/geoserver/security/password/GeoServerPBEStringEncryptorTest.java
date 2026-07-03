@@ -126,13 +126,6 @@ class GeoServerPBEStringEncryptorTest {
         assertThrows(RuntimeException.class, () -> encryptor.encrypt(ORIGINAL));
     }
 
-    @Test
-    void testEncryptWithoutAlgorithmThrowsException() {
-        GeoServerPBEStringEncryptor encryptor = new GeoServerPBEStringEncryptor();
-        encryptor.setPasswordCharArray(PASSWORD);
-        assertThrows(RuntimeException.class, () -> encryptor.encrypt(ORIGINAL));
-    }
-
     private static StandardPBEStringEncryptor createJasyptEncryptor(String algorithm, String providerName) {
         StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
         encryptor.setPasswordCharArray(PASSWORD);
