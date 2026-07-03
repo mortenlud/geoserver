@@ -36,6 +36,9 @@ public class PBEPasswordEncoderWrapper implements PasswordEncoder {
     @Override
     public boolean matches(CharSequence rawPassword, String encodedPassword) {
         checkInitialization();
+        if (rawPassword == null || encodedPassword == null) {
+            return false;
+        }
         return Objects.equals(encryptor.decrypt(encodedPassword), rawPassword.toString());
     }
 
