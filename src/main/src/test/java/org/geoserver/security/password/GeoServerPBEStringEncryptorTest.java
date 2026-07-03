@@ -99,8 +99,8 @@ public class GeoServerPBEStringEncryptorTest {
     @Test
     public void testEncryptNullReturnsNull() {
         GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
-        assertNull(encryptor.encrypt((String) null));
-        assertNull(encryptor.decrypt((String) null));
+        assertNull(encryptor.encrypt(null));
+        assertNull(encryptor.decrypt(null));
     }
 
     @Test
