@@ -5,6 +5,7 @@
 package org.geoserver.security.password;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -124,6 +125,74 @@ class GeoServerPBEStringEncryptorTest {
         GeoServerPBEStringEncryptor encryptor = new GeoServerPBEStringEncryptor();
         encryptor.setAlgorithm(ALGORITHM_MD5_DES);
         assertThrows(RuntimeException.class, () -> encryptor.encrypt(ORIGINAL));
+    }
+
+    @Test
+    void testCustomSaltSize() {
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
+        encryptor.setSaltSizeBytes(16);
+        String encrypted = encryptor.encrypt(ORIGINAL);
+        assertEquals(ORIGINAL, encryptor.decrypt(encrypted));
+    }
+
+    @Test
+    void testInvalidSaltSizeThrowsException() {
+        GeoServerPBEStringEncryptor encryptor = new GeoServerPBEStringEncryptor();
+        assertThrows(IllegalArgumentException.class, () -> encryptor.setSaltSizeBytes(0));
+        assertThrows(IllegalArgumentException.class, () -> encryptor.setSaltSizeBytes(-1));
+    }
+
+    @Test
+    void testCustomKeyObtentionIterations() {
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
+        encryptor.setKeyObtentionIterations(5000);
+        String encrypted = encryptor.encrypt(ORIGINAL);
+        assertEquals(ORIGINAL, encryptor.decrypt(encrypted));
+    }
+
+    @Test
+    void testInvalidKeyObtentionIterationsThrowsException() {
+        GeoServerPBEStringEncryptor encryptor = new GeoServerPBEStringEncryptor();
+        assertThrows(IllegalArgumentException.class, () -> encryptor.setKeyObtentionIterations(0));
+        assertThrows(IllegalArgumentException.class, () -> encryptor.setKeyObtentionIterations(-1));
+    }
+
+    @Test
+    void testClearPasswordPreventsDecryption() {
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
+        String encrypted = encryptor.encrypt(ORIGINAL);
+        encryptor.clearPassword();
+        assertThrows(RuntimeException.class, () -> encryptor.decrypt(encrypted));
+    }
+
+    @Test
+    void testSetPasswordAfterClearWorks() {
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
+        String encrypted = encryptor.encrypt(ORIGINAL);
+        encryptor.clearPassword();
+        encryptor.setPasswordCharArray(PASSWORD);
+        String encrypted2 = encryptor.encrypt(ORIGINAL);
+        assertEquals(ORIGINAL, encryptor.decrypt(encrypted2));
+    }
+
+    @Test
+    void testResetPasswordChangesEncryption() {
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
+        String encrypted = encryptor.encrypt(ORIGINAL);
+        encryptor.setPasswordCharArray("different".toCharArray());
+        assertThrows(RuntimeException.class, () -> encryptor.decrypt(encrypted));
+    }
+
+    @Test
+    void testDifferentKeyObtentionIterationsProduceDifferentCiphertext() {
+        GeoServerPBEStringEncryptor encryptor1000 = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
+        GeoServerPBEStringEncryptor encryptor5000 = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
+        encryptor5000.setKeyObtentionIterations(5000);
+
+        String encrypted1000 = encryptor1000.encrypt(ORIGINAL);
+        String encrypted5000 = encryptor5000.encrypt(ORIGINAL);
+
+        assertNotEquals(encrypted1000, encrypted5000, "ciphertexts with different iteration counts should differ");
     }
 
     private static StandardPBEStringEncryptor createJasyptEncryptor(String algorithm, String providerName) {

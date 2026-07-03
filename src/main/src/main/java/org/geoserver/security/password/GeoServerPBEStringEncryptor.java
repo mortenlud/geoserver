@@ -47,4 +47,16 @@ public final class GeoServerPBEStringEncryptor {
     public void setProviderName(String providerName) {
         byteEncryptor.setProviderName(providerName);
     }
+
+    public void setSaltSizeBytes(int saltSizeBytes) {
+        byteEncryptor.setSaltSizeBytes(saltSizeBytes);
+    }
+
+    public void setKeyObtentionIterations(int keyObtentionIterations) {
+        byteEncryptor.setKeyObtentionIterations(keyObtentionIterations);
+    }
+
+    public void clearPassword() {
+        byteEncryptor.clearPassword();
+    }
 }
