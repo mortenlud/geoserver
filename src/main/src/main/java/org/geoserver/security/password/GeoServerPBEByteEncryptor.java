@@ -22,7 +22,7 @@ import org.geoserver.security.SecurityUtils;
  * ensuring full backward compatibility with passwords encrypted by earlier versions of GeoServer that used Jasypt
  * directly.
  *
- * <p>Supports any PBE algorithm available through the JCA providers (e.g. {@code PBEWITHMD5ANDDES},
+ * <p>Supports any PBE algorithm available through the JCA providers (e.g. {@code PBEWithMD5AndDES},
  * {@code PBEWITHSHA256AND256BITAES-CBC-BC} with Bouncy Castle). Salt size is auto-computed from the algorithm's block
  * size by default.
  */
