@@ -5,6 +5,7 @@
 package org.geoserver.security.password;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
@@ -78,6 +79,34 @@ public class GeoServerPBEByteEncryptorTest {
         byte[] encrypted = encryptor.encrypt(new byte[0]);
         assertNotNull(encrypted);
         assertArrayEquals(new byte[0], encryptor.decrypt(encrypted));
+    }
+
+    @Test
+    public void testCiphertextLengthMatchesDefaultSaltSize() {
+        GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
+        encryptor.setSaltSizeBytes(16);
+        byte[] encrypted = encryptor.encrypt(new byte[0]);
+        assertNotNull(encrypted);
+        assertEquals(32, encrypted.length);
+    }
+
+    @Test
+    public void testCiphertextLengthMatchesSmallSaltSize() {
+        GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
+        encryptor.setSaltSizeBytes(8);
+        byte[] encrypted = encryptor.encrypt(new byte[0]);
+        assertNotNull(encrypted);
+        assertEquals(16, encrypted.length);
+    }
+
+    @Test
+    public void testNextEncryptDecryptWorksWithLargePayload() {
+        GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
+        encryptor.setSaltSizeBytes(16);
+        byte[] largePayload = new byte[1000];
+        new java.security.SecureRandom().nextBytes(largePayload);
+        byte[] encrypted = encryptor.encrypt(largePayload);
+        assertArrayEquals(largePayload, encryptor.decrypt(encrypted));
     }
 
     @Test

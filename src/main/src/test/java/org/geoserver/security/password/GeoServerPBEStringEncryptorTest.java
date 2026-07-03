@@ -97,6 +97,28 @@ public class GeoServerPBEStringEncryptorTest {
     }
 
     @Test
+    public void testSaltLengthMatchesEmptyPlaintextCiphertextSize() {
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
+        encryptor.setSaltSizeBytes(8);
+        String encrypted = encryptor.encrypt("");
+        assertNotNull(encrypted);
+        byte[] decoded = java.util.Base64.getDecoder().decode(encrypted);
+        assertEquals(16, decoded.length);
+    }
+
+    @Test
+    public void testRejectTruncatedStringWith16ByteCiphertext() {
+        GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
+        encryptor.setSaltSizeBytes(16);
+        // 18-byte string corresponds to a valid base64 decoding of 13 bytes, 13 < 16
+        String truncated = "SGVsbG9Xbz"; // base64 decodes to 12 bytes, 12 < 16
+        Exception ex = assertThrows(RuntimeException.class, () -> encryptor.decrypt(truncated));
+        assertTrue(
+                "Expected ´Encrypted message does not contain both salt and ciphertext´ was: " + ex.getMessage(),
+                ex.getMessage().contains("Encrypted message does not contain both salt and ciphertext"));
+    }
+
+    @Test
     public void testEncryptNullReturnsNull() {
         GeoServerPBEStringEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         assertNull(encryptor.encrypt(null));
@@ -116,7 +138,7 @@ public class GeoServerPBEStringEncryptorTest {
         String tooShort = "AAA=";
         Exception ex = assertThrows(RuntimeException.class, () -> encryptor.decrypt(tooShort));
         assertTrue(
-                "Expected ´Decryption failed´ was: " + ex.getMessage(),
+                "Expected ´Encrypted message does not contain both salt and ciphertext´ was: " + ex.getMessage(),
                 ex.getMessage().contains("Encrypted message does not contain both salt and ciphertext"));
     }
 
