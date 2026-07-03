@@ -4,20 +4,20 @@
  */
 package org.geoserver.security.password;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jasypt.encryption.pbe.StandardPBEByteEncryptor;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
-class GeoServerPBEByteEncryptorTest {
+public class GeoServerPBEByteEncryptorTest {
 
     private static final char[] PASSWORD = "geoserver".toCharArray();
     private static final byte[] MESSAGE = "secret-password-cafe\u0301".getBytes(StandardCharsets.UTF_8);
@@ -25,15 +25,15 @@ class GeoServerPBEByteEncryptorTest {
     private static final String ALGORITHM_SHA256_AES = "PBEWITHSHA256AND256BITAES-CBC-BC";
     private static final String PROVIDER_BC = "BC";
 
-    @BeforeAll
-    static void registerBouncyCastleProvider() {
+    @BeforeClass
+    public static void registerBouncyCastleProvider() {
         if (Security.getProvider("BC") == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
     }
 
     @Test
-    void testJasyptEncryptedMd5DesCanBeDecrypted() {
+    public void testJasyptEncryptedMd5DesCanBeDecrypted() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor(ALGORITHM_MD5_DES, null);
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
 
@@ -43,7 +43,7 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testGeoServerEncryptedMd5DesCanBeDecryptedByJasypt() {
+    public void testGeoServerEncryptedMd5DesCanBeDecryptedByJasypt() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor(ALGORITHM_MD5_DES, null);
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
 
@@ -53,7 +53,7 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testJasyptEncryptedSha256CanBeDecrypted() {
+    public void testJasyptEncryptedSha256CanBeDecrypted() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
 
@@ -63,7 +63,7 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testGeoServerEncryptedSha256CanBeDecryptedByJasypt() {
+    public void testGeoServerEncryptedSha256CanBeDecryptedByJasypt() {
         StandardPBEByteEncryptor jasyptEncryptor = createJasyptEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
 
@@ -73,7 +73,7 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testEncryptDecryptEmptyArray() {
+    public void testEncryptDecryptEmptyArray() {
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         byte[] encrypted = encryptor.encrypt(new byte[0]);
         assertNotNull(encrypted);
@@ -81,21 +81,21 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testEncryptNullReturnsNull() {
+    public void testEncryptNullReturnsNull() {
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         assertNull(encryptor.encrypt((byte[]) null));
         assertNull(encryptor.decrypt((byte[]) null));
     }
 
     @Test
-    void testDecryptTruncatedDataThrowsException() {
+    public void testDecryptTruncatedDataThrowsException() {
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         byte[] tooShort = new byte[3];
         assertThrows(IllegalArgumentException.class, () -> encryptor.decrypt(tooShort));
     }
 
     @Test
-    void testCustomSaltSize() {
+    public void testCustomSaltSize() {
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_SHA256_AES, PROVIDER_BC);
         encryptor.setSaltSizeBytes(16);
         byte[] encrypted = encryptor.encrypt(MESSAGE);
@@ -103,14 +103,14 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testInvalidSaltSizeThrowsException() {
+    public void testInvalidSaltSizeThrowsException() {
         GeoServerPBEByteEncryptor encryptor = new GeoServerPBEByteEncryptor();
         assertThrows(IllegalArgumentException.class, () -> encryptor.setSaltSizeBytes(0));
         assertThrows(IllegalArgumentException.class, () -> encryptor.setSaltSizeBytes(-1));
     }
 
     @Test
-    void testCustomKeyObtentionIterations() {
+    public void testCustomKeyObtentionIterations() {
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         encryptor.setKeyObtentionIterations(5000);
         byte[] encrypted = encryptor.encrypt(MESSAGE);
@@ -118,14 +118,14 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testInvalidKeyObtentionIterationsThrowsException() {
+    public void testInvalidKeyObtentionIterationsThrowsException() {
         GeoServerPBEByteEncryptor encryptor = new GeoServerPBEByteEncryptor();
         assertThrows(IllegalArgumentException.class, () -> encryptor.setKeyObtentionIterations(0));
         assertThrows(IllegalArgumentException.class, () -> encryptor.setKeyObtentionIterations(-1));
     }
 
     @Test
-    void testClearPasswordPreventsDecryption() {
+    public void testClearPasswordPreventsDecryption() {
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         byte[] encrypted = encryptor.encrypt(MESSAGE);
         encryptor.clearPassword();
@@ -133,7 +133,7 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testSetPasswordAfterClearWorks() {
+    public void testSetPasswordAfterClearWorks() {
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         byte[] encrypted = encryptor.encrypt(MESSAGE);
         encryptor.clearPassword();
@@ -144,23 +144,23 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testResetPasswordChangesEncryptionKey() {
+    public void testResetPasswordChangesEncryptionKey() {
         GeoServerPBEByteEncryptor encryptor = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         byte[] encrypted = encryptor.encrypt(MESSAGE);
-        // set a different password → old ciphertext should not decrypt
+        // set a different password ? old ciphertext should not decrypt
         encryptor.setPasswordCharArray("different".toCharArray());
         assertThrows(IllegalStateException.class, () -> encryptor.decrypt(encrypted));
     }
 
     @Test
-    void testEncryptWithoutPasswordThrowsException() {
+    public void testEncryptWithoutPasswordThrowsException() {
         GeoServerPBEByteEncryptor encryptor = new GeoServerPBEByteEncryptor();
         encryptor.setAlgorithm(ALGORITHM_MD5_DES);
         assertThrows(IllegalStateException.class, () -> encryptor.encrypt(MESSAGE));
     }
 
     @Test
-    void testNonExistentProviderThrowsException() {
+    public void testNonExistentProviderThrowsException() {
         GeoServerPBEByteEncryptor encryptor = new GeoServerPBEByteEncryptor();
         encryptor.setPasswordCharArray(PASSWORD);
         encryptor.setAlgorithm(ALGORITHM_MD5_DES);
@@ -169,7 +169,7 @@ class GeoServerPBEByteEncryptorTest {
     }
 
     @Test
-    void testDifferentKeyObtentionIterationsProduceDifferentCiphertext() {
+    public void testDifferentKeyObtentionIterationsProduceDifferentCiphertext() {
         GeoServerPBEByteEncryptor encryptor1000 = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         GeoServerPBEByteEncryptor encryptor5000 = createGeoServerEncryptor(ALGORITHM_MD5_DES, null);
         encryptor5000.setKeyObtentionIterations(5000);
@@ -187,7 +187,7 @@ class GeoServerPBEByteEncryptorTest {
                 break;
             }
         }
-        assertTrue(!same, "ciphertexts with different iteration counts should differ");
+        assertTrue("ciphertexts with different iteration counts should differ", !same);
     }
 
     private static StandardPBEByteEncryptor createJasyptEncryptor(String algorithm, String providerName) {
