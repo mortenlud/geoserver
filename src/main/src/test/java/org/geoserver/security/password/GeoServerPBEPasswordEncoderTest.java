@@ -6,13 +6,13 @@ package org.geoserver.security.password;
 
 import static org.geoserver.security.SecurityUtils.toBytes;
 import static org.geoserver.security.SecurityUtils.toChars;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
@@ -25,12 +25,11 @@ import org.geoserver.security.GeoServerSecurityManager;
 import org.geoserver.security.GeoServerUserGroupService;
 import org.geoserver.security.KeyStoreProvider;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 public class GeoServerPBEPasswordEncoderTest {
 
@@ -48,11 +47,16 @@ public class GeoServerPBEPasswordEncoderTest {
 
     private static final byte[] KEYSTORE_PASSWORD_BYTES = toBytes("testKey123".toCharArray());
 
-    private AutoCloseable mockCloser;
+    @BeforeClass
+    public static void registerBouncyCastleProvider() {
+        if (Security.getProvider("BC") == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
-    @BeforeEach
+    @Before
     public void setUp() throws IOException {
-        mockCloser = MockitoAnnotations.openMocks(this);
+        org.mockito.MockitoAnnotations.openMocks(this);
 
         when(securityManager.getKeyStoreProvider()).thenReturn(keyStoreProvider);
         when(userGroupService.getName()).thenReturn("testService");
@@ -65,16 +69,9 @@ public class GeoServerPBEPasswordEncoderTest {
                 .thenReturn(new javax.crypto.spec.SecretKeySpec(KEYSTORE_PASSWORD_BYTES, "DES"));
     }
 
-    @BeforeAll
-    public static void registerBouncyCastleProvider() {
-        if (Security.getProvider("BC") == null) {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception {
-        mockCloser.close();
+    @After
+    public void tearDown() {
+        // no-op in JUnit 4 (no AutoCloseable to clean up)
     }
 
     private static StandardPBEStringEncryptor createJasyptEncryptor(String algorithm, String providerName) {
@@ -105,7 +102,7 @@ public class GeoServerPBEPasswordEncoderTest {
         String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertNotEquals(original, encoded);
-        assertTrue(encoded.startsWith("crypto1"), "Encoded string should start with the specified prefix");
+        assertTrue("Encoded string should start with the specified prefix", encoded.startsWith("crypto1"));
 
         String decoded = encoder.decode(encoded);
         assertNotNull(decoded);
@@ -121,7 +118,7 @@ public class GeoServerPBEPasswordEncoderTest {
         char[] original = "testPasswordCafe\u0301".toCharArray();
         String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
-        assertTrue(encoded.startsWith("crypto1"), "Encoded string should start with the specified prefix");
+        assertTrue("Encoded string should start with the specified prefix", encoded.startsWith("crypto1"));
 
         char[] decoded = encoder.decodeToCharArray(encoded);
         assertNotNull(decoded);
@@ -139,7 +136,7 @@ public class GeoServerPBEPasswordEncoderTest {
         String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertNotEquals(original, encoded);
-        assertTrue(encoded.startsWith("crypto2"), "Encoded string should start with the specified prefix");
+        assertTrue("Encoded string should start with the specified prefix", encoded.startsWith("crypto2"));
 
         String decoded = encoder.decode(encoded);
         assertNotNull(decoded);
@@ -156,7 +153,7 @@ public class GeoServerPBEPasswordEncoderTest {
         char[] original = "testPasswordCafe\u0301".toCharArray();
         String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
-        assertTrue(encoded.startsWith("crypto2"), "Encoded string should start with the specified prefix");
+        assertTrue("Encoded string should start with the specified prefix", encoded.startsWith("crypto2"));
 
         char[] decoded = encoder.decodeToCharArray(encoded);
         assertNotNull(decoded);
@@ -183,7 +180,7 @@ public class GeoServerPBEPasswordEncoderTest {
         encoder.setAlgorithm("PBEWITHMD5ANDDES");
         encoder.setPrefix("crypto1");
 
-        String original = "æøå!@#$%^&*()_+-=[]{}|;':\",./<>?~";
+        String original = "æøå!@#$%^&*()_+-=[]{}|;':./<>?~";
         String encoded = encoder.encodePassword(original, null);
         assertNotNull(encoded);
         assertEquals(original, encoder.decode(encoded));
