@@ -200,7 +200,7 @@ public class GeoServerPBEPasswordEncoderTest {
         // changing the prefix causes prefix-stripping to leave the "crypto1:" trailer intact,
         // which is not valid Base64 → decode throws
         encoder.setPrefix("wrongPrefix");
-        assertThrows(Exception.class, () -> encoder.decode(encoded));
+        assertThrows(IllegalArgumentException.class, () -> encoder.decode(encoded));
     }
 
     @Test
@@ -209,7 +209,7 @@ public class GeoServerPBEPasswordEncoderTest {
         encoder.setAlgorithm("PBEWITHMD5ANDDES");
         encoder.setPrefix("crypto1");
 
-        assertThrows(Exception.class, () -> encoder.decode("crypto1:!!!invalid-base64!!!"));
+        assertThrows(IllegalArgumentException.class, () -> encoder.decode("crypto1:!!!invalid-base64!!!"));
     }
 
     @Test
@@ -282,8 +282,10 @@ public class GeoServerPBEPasswordEncoderTest {
         encoder.setAlgorithm("PBEWITHMD5ANDDES");
         encoder.setPrefix("crypto1");
 
-        String password = "crossPathTest";
+        String password = "crossPathCafe\u0301æøå";
         String encoded = encoder.encodePassword(password, null);
+
+        assertEquals(password, encoder.decode(encoded));
 
         char[] decodedChars = encoder.decodeToCharArray(encoded);
         assertArrayEquals(password.toCharArray(), decodedChars);
@@ -297,29 +299,53 @@ public class GeoServerPBEPasswordEncoderTest {
 
     @Test
     public void testJasyptEncryptedStringCanBeDecodedByPasswordEncoder() throws IOException {
-        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHMD5ANDDES", null);
-        GeoServerPBEPasswordEncoder encoder = createEncoder();
-        encoder.setAlgorithm("PBEWITHMD5ANDDES");
-        encoder.setPrefix("crypto1");
-
-        String original = "testPasswordCafe\u0301";
-        String jasyptEncrypted = jasyptEncryptor.encrypt(original);
-
-        String prefixed = "crypto1:" + jasyptEncrypted;
-        assertEquals(original, encoder.decode(prefixed));
+        assertJasyptEncryptedStringCanBeDecodedByPasswordEncoder("PBEWITHMD5ANDDES", "crypto1", null);
     }
 
     @Test
     public void testPasswordEncoderEncodedStringCanBeDecryptedByJasypt() throws IOException {
-        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor("PBEWITHMD5ANDDES", null);
+        assertPasswordEncoderEncodedStringCanBeDecryptedByJasypt("PBEWITHMD5ANDDES", "crypto1", null);
+    }
+
+    @Test
+    public void testBouncyCastleJasyptEncryptedStringCanBeDecodedByPasswordEncoder() throws IOException {
+        assertJasyptEncryptedStringCanBeDecodedByPasswordEncoder("PBEWITHSHA256AND256BITAES-CBC-BC", "crypto2", "BC");
+    }
+
+    @Test
+    public void testPasswordEncoderBouncyCastleEncodedStringCanBeDecryptedByJasypt() throws IOException {
+        assertPasswordEncoderEncodedStringCanBeDecryptedByJasypt("PBEWITHSHA256AND256BITAES-CBC-BC", "crypto2", "BC");
+    }
+
+    private void assertJasyptEncryptedStringCanBeDecodedByPasswordEncoder(
+            String algorithm, String prefix, String providerName) throws IOException {
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(algorithm, providerName);
         GeoServerPBEPasswordEncoder encoder = createEncoder();
-        encoder.setAlgorithm("PBEWITHMD5ANDDES");
-        encoder.setPrefix("crypto1");
+        encoder.setAlgorithm(algorithm);
+        encoder.setPrefix(prefix);
+        if (providerName != null) {
+            encoder.setProviderName(providerName);
+        }
+
+        String original = "testPasswordCafe\u0301";
+        String jasyptEncrypted = jasyptEncryptor.encrypt(original);
+
+        assertEquals(original, encoder.decode(prefix + ":" + jasyptEncrypted));
+    }
+
+    private void assertPasswordEncoderEncodedStringCanBeDecryptedByJasypt(
+            String algorithm, String prefix, String providerName) throws IOException {
+        StandardPBEStringEncryptor jasyptEncryptor = createJasyptEncryptor(algorithm, providerName);
+        GeoServerPBEPasswordEncoder encoder = createEncoder();
+        encoder.setAlgorithm(algorithm);
+        encoder.setPrefix(prefix);
+        if (providerName != null) {
+            encoder.setProviderName(providerName);
+        }
 
         String original = "testPasswordCafe\u0301";
         String encoded = encoder.encodePassword(original, null);
 
-        String stripped = encoded.substring("crypto1:".length());
-        assertEquals(original, jasyptEncryptor.decrypt(stripped));
+        assertEquals(original, jasyptEncryptor.decrypt(encoded.substring((prefix + ":").length())));
     }
 }
